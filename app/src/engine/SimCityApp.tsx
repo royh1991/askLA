@@ -49,7 +49,6 @@ export default function SimCityApp() {
         setSelectedDistrict(id ? DISTRICTS_INFO.find(d => d.id === id) || null : null);
       });
 
-      game.renderDistrictOverlay();
       setLoading(false);
     })();
 
