@@ -1,6 +1,7 @@
 import { Application, Container, Graphics, Sprite, Texture, Assets, Text, TextStyle, FederatedPointerEvent } from 'pixi.js';
 import { TileType, BuildingType, TileData, TILE_WIDTH, TILE_HEIGHT, MAP_COLS, MAP_ROWS, gridToScreen, screenToGrid } from './types';
-import { generateMapData } from './MapData';
+import { generateMapData, LANDMARKS, NEIGHBORHOODS, FREEWAYS } from './MapData';
+import type { Neighborhood } from './MapData';
 
 const TERRAIN_COLORS: Record<number, number> = {
   [TileType.WATER]: 0x1A5276,
@@ -142,12 +143,16 @@ export class Game {
     for (const config of Object.values(BUILDING_SPRITES)) {
       srcs.add(config.src);
     }
+    // Also load landmark sprites
+    for (const lm of LANDMARKS) {
+      if (lm.sprite) srcs.add(`/sprites/${lm.sprite}.png`);
+    }
     for (const src of srcs) {
       try {
         const texture = await Assets.load(src);
         this.textures.set(src, texture);
       } catch (e) {
-        console.warn('Failed to load texture:', src);
+        // Sprite not generated yet, will use fallback
       }
     }
   }
@@ -189,23 +194,64 @@ export class Game {
           color = (er << 16) | (eg << 8) | eb;
         }
 
-        // Isometric diamond
+        const elev = tile.elevation * 6; // pixels of elevation
+
+        // If elevated, draw side faces first
+        if (elev > 0) {
+          // Left side face (darker)
+          const sideColor = ((Math.max(0, ((color >> 16) & 0xFF) - 40)) << 16) |
+                           ((Math.max(0, ((color >> 8) & 0xFF) - 30)) << 8) |
+                           Math.max(0, (color & 0xFF) - 20);
+          g.fill({ color: sideColor });
+          g.moveTo(x - TILE_WIDTH / 2, y + TILE_HEIGHT / 2 - elev);
+          g.lineTo(x, y + TILE_HEIGHT - elev);
+          g.lineTo(x, y + TILE_HEIGHT);
+          g.lineTo(x - TILE_WIDTH / 2, y + TILE_HEIGHT / 2);
+          g.closePath();
+          g.fill();
+
+          // Right side face (slightly darker)
+          const sideColor2 = ((Math.max(0, ((color >> 16) & 0xFF) - 25)) << 16) |
+                            ((Math.max(0, ((color >> 8) & 0xFF) - 20)) << 8) |
+                            Math.max(0, (color & 0xFF) - 10);
+          g.fill({ color: sideColor2 });
+          g.moveTo(x, y + TILE_HEIGHT - elev);
+          g.lineTo(x + TILE_WIDTH / 2, y + TILE_HEIGHT / 2 - elev);
+          g.lineTo(x + TILE_WIDTH / 2, y + TILE_HEIGHT / 2);
+          g.lineTo(x, y + TILE_HEIGHT);
+          g.closePath();
+          g.fill();
+        }
+
+        // Top face (elevated by elev pixels)
         g.fill({ color });
-        g.moveTo(x, y);
-        g.lineTo(x + TILE_WIDTH / 2, y + TILE_HEIGHT / 2);
-        g.lineTo(x, y + TILE_HEIGHT);
-        g.lineTo(x - TILE_WIDTH / 2, y + TILE_HEIGHT / 2);
+        g.moveTo(x, y - elev);
+        g.lineTo(x + TILE_WIDTH / 2, y + TILE_HEIGHT / 2 - elev);
+        g.lineTo(x, y + TILE_HEIGHT - elev);
+        g.lineTo(x - TILE_WIDTH / 2, y + TILE_HEIGHT / 2 - elev);
         g.closePath();
         g.fill();
 
+        // Freeway markings (thick white dashes)
+        if (tile.terrain === TileType.HIGHWAY) {
+          g.fill({ color: 0xFFFFFF, alpha: 0.3 });
+          g.rect(x - 2, y + TILE_HEIGHT / 2 - elev - 1, 4, 2);
+          g.fill();
+          // Lane edge lines
+          g.fill({ color: 0xFFFF00, alpha: 0.15 });
+          g.moveTo(x - TILE_WIDTH / 4, y + TILE_HEIGHT / 4 - elev);
+          g.lineTo(x + TILE_WIDTH / 4, y + 3 * TILE_HEIGHT / 4 - elev);
+          g.stroke({ width: 0.5, color: 0xFFFF00, alpha: 0.2 });
+        }
+
         // Road markings
-        if (tile.terrain >= TileType.ROAD_NS && tile.terrain <= TileType.HIGHWAY) {
-          g.fill({ color: 0xFFFF00, alpha: 0.2 });
+        if (tile.terrain >= TileType.ROAD_NS && tile.terrain <= TileType.ROAD_CROSS) {
+          g.fill({ color: 0xFFFF00, alpha: 0.15 });
           if (tile.terrain === TileType.ROAD_NS || tile.terrain === TileType.ROAD_CROSS) {
-            g.rect(x - 1, y + TILE_HEIGHT / 4, 2, TILE_HEIGHT / 2);
+            g.rect(x - 0.5, y + TILE_HEIGHT / 4 - elev, 1, TILE_HEIGHT / 2);
           }
           if (tile.terrain === TileType.ROAD_EW || tile.terrain === TileType.ROAD_CROSS) {
-            g.rect(x - TILE_WIDTH / 4, y + TILE_HEIGHT / 2 - 1, TILE_WIDTH / 2, 2);
+            g.rect(x - TILE_WIDTH / 4, y + TILE_HEIGHT / 2 - elev - 0.5, TILE_WIDTH / 2, 1);
           }
           g.fill();
         }
@@ -236,14 +282,27 @@ export class Game {
       const texture = this.textures.get(config.src);
       const { x, y } = gridToScreen(col, row);
 
-      if (texture) {
-        // Use actual Gemini-generated sprite
+      const elev = tile.elevation * 6;
+
+      // Check if this is a landmark with its own sprite
+      const landmark = LANDMARKS.find(lm => lm.col === col && lm.row === row && lm.sprite);
+      const lmTexture = landmark?.sprite ? this.textures.get(`/sprites/${landmark.sprite}.png`) : null;
+
+      if (lmTexture) {
+        // Render landmark sprite
+        const sprite = new Sprite(lmTexture);
+        sprite.scale.set(0.8);
+        sprite.anchor.set(0.5, 0.9);
+        sprite.x = x;
+        sprite.y = y + TILE_HEIGHT / 2 - elev;
+        sprite.zIndex = row * MAP_COLS + col;
+        this.buildingLayer.addChild(sprite);
+      } else if (texture) {
         const sprite = new Sprite(texture);
         sprite.scale.set(config.scale);
         sprite.anchor.set(0.5, config.anchorY);
         sprite.x = x;
-        sprite.y = y + TILE_HEIGHT / 2;
-        // Sort by depth (row position)
+        sprite.y = y + TILE_HEIGHT / 2 - elev;
         sprite.zIndex = row * MAP_COLS + col;
         this.buildingLayer.addChild(sprite);
       } else {
@@ -303,10 +362,10 @@ export class Game {
       this.overlayLayer.addChild(g);
     }
 
-    // Always show district labels
-    const labelStyle = new TextStyle({
+    // District labels
+    const distLabelStyle = new TextStyle({
       fontFamily: 'Consolas, monospace',
-      fontSize: 10,
+      fontSize: 11,
       fontWeight: 'bold',
       fill: 0xFFFFFF,
       stroke: { color: 0x000000, width: 3 },
@@ -323,10 +382,69 @@ export class Game {
         }
       }
       if (count === 0) continue;
-      const label = new Text({ text: `CD-${distId}`, style: labelStyle });
+      const label = new Text({ text: `CD-${distId}`, style: distLabelStyle });
       label.anchor.set(0.5);
       label.x = sumX / count;
       label.y = sumY / count;
+      this.labelLayer.addChild(label);
+    }
+
+    // Neighborhood labels (smaller, semi-transparent)
+    const hoodStyle = new TextStyle({
+      fontFamily: 'Segoe UI, Tahoma, sans-serif',
+      fontSize: 7,
+      fill: 0xE0E0E0,
+      stroke: { color: 0x000000, width: 2 },
+      letterSpacing: 0.5,
+    });
+
+    for (const hood of NEIGHBORHOODS) {
+      const { x, y } = gridToScreen(hood.col, hood.row);
+      const label = new Text({ text: hood.name, style: hoodStyle });
+      label.anchor.set(0.5);
+      label.x = x;
+      label.y = y + 12;
+      label.alpha = 0.7;
+      this.labelLayer.addChild(label);
+    }
+
+    // Landmark labels (gold colored, bold)
+    const lmStyle = new TextStyle({
+      fontFamily: 'Georgia, serif',
+      fontSize: 8,
+      fontWeight: 'bold',
+      fill: 0xFFD700,
+      stroke: { color: 0x000000, width: 2.5 },
+    });
+
+    for (const lm of LANDMARKS) {
+      const { x, y } = gridToScreen(lm.col, lm.row);
+      const elev = this.mapData[lm.row]?.[lm.col]?.elevation ?? 0;
+      const label = new Text({ text: lm.name, style: lmStyle });
+      label.anchor.set(0.5);
+      label.x = x;
+      label.y = y - 20 - elev * 6;
+      this.labelLayer.addChild(label);
+    }
+
+    // Freeway labels
+    const fwStyle = new TextStyle({
+      fontFamily: 'Consolas, monospace',
+      fontSize: 7,
+      fontWeight: 'bold',
+      fill: 0xFFFFFF,
+      stroke: { color: 0x606060, width: 2 },
+    });
+
+    for (const fw of FREEWAYS) {
+      const midIdx = Math.floor(fw.points.length / 2);
+      const [mc, mr] = fw.points[midIdx];
+      const { x, y } = gridToScreen(mc, mr);
+      const label = new Text({ text: fw.name, style: fwStyle });
+      label.anchor.set(0.5);
+      label.x = x;
+      label.y = y - 8;
+      label.alpha = 0.8;
       this.labelLayer.addChild(label);
     }
   }
