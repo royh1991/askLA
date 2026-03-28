@@ -113,17 +113,28 @@ interface Landmark {
 }
 
 export const LANDMARKS: Landmark[] = [
-  { name: 'City Hall', col: 69, row: 42, building: BuildingType.CITY_HALL, sprite: 'lm-dodger-stadium', size: 2 },
-  { name: 'Dodger Stadium', col: 72, row: 37, building: BuildingType.STADIUM, sprite: 'lm-dodger-stadium', size: 3 },
-  { name: 'Hollywood Sign', col: 54, row: 28, building: BuildingType.HOLLYWOOD_SIGN, sprite: 'lm-hollywood-sign', size: 3 },
-  { name: 'Griffith Observatory', col: 60, row: 28, building: BuildingType.OBSERVATORY, sprite: 'lm-griffith-obs', size: 2 },
-  { name: 'UCLA', col: 40, row: 42, building: BuildingType.PARK, sprite: 'lm-ucla', size: 3 },
-  { name: 'USC', col: 64, row: 50, building: BuildingType.PARK, sprite: 'lm-usc', size: 3 },
-  { name: 'LAX', col: 30, row: 64, building: BuildingType.AIRPORT, sprite: 'lm-lax-airport', size: 5 },
-  { name: 'Santa Monica Pier', col: 20, row: 50, building: BuildingType.COMMERCIAL, sprite: 'lm-santa-monica-pier', size: 2 },
-  { name: 'Venice Boardwalk', col: 20, row: 55, building: BuildingType.COMMERCIAL, sprite: 'lm-venice-boardwalk', size: 2 },
-  { name: 'Crypto.com Arena', col: 66, row: 48, building: BuildingType.STADIUM, sprite: 'lm-staples-center', size: 2 },
-  { name: 'Port of LA', col: 62, row: 88, building: BuildingType.PORT_CRANE, sprite: 'lm-port-la', size: 4 },
+  // City Hall is in DTLA near 1st & Spring — roughly col 68, row 42
+  { name: 'City Hall', col: 68, row: 42, building: BuildingType.CITY_HALL, sprite: 'bld-cityhall', size: 2 },
+  // Dodger Stadium is north of DTLA in Elysian Park — col 72, row 36
+  { name: 'Dodger Stadium', col: 72, row: 36, building: BuildingType.STADIUM, sprite: 'lm-dodger-stadium', size: 4 },
+  // Hollywood Sign is on Mt. Lee in the Hollywood Hills — col 54, row 26
+  { name: 'Hollywood Sign', col: 54, row: 26, building: BuildingType.HOLLYWOOD_SIGN, sprite: 'lm-hollywood-sign', size: 4 },
+  // Griffith Observatory — northeast of Hollywood on the hills — col 60, row 26
+  { name: 'Griffith Observatory', col: 60, row: 26, building: BuildingType.OBSERVATORY, sprite: 'lm-griffith-obs', size: 3 },
+  // UCLA is in Westwood — col 38, row 42 — large campus
+  { name: 'UCLA', col: 38, row: 42, building: BuildingType.PARK, sprite: 'lm-ucla', size: 5 },
+  // USC is south of DTLA near Exposition Park — col 64, row: 52 — large campus
+  { name: 'USC', col: 64, row: 52, building: BuildingType.PARK, sprite: 'lm-usc', size: 5 },
+  // LAX is south of Marina del Rey — col 30, row 62 — very large
+  { name: 'LAX', col: 30, row: 62, building: BuildingType.AIRPORT, sprite: 'lm-lax-airport', size: 6 },
+  // Santa Monica Pier — at the coast — col 22, row 47
+  { name: 'Santa Monica Pier', col: 22, row: 47, building: BuildingType.COMMERCIAL, sprite: 'lm-santa-monica-pier', size: 3 },
+  // Venice Boardwalk — south of Santa Monica — col 23, row: 52
+  { name: 'Venice Boardwalk', col: 23, row: 52, building: BuildingType.COMMERCIAL, sprite: 'lm-venice-boardwalk', size: 3 },
+  // Crypto.com Arena is south of DTLA near Figueroa — col 66, row 48
+  { name: 'Crypto.com Arena', col: 66, row: 48, building: BuildingType.STADIUM, sprite: 'lm-staples-center', size: 3 },
+  // Port of LA — far south in San Pedro — col 58, row 92
+  { name: 'Port of LA', col: 58, row: 92, building: BuildingType.PORT_CRANE, sprite: 'lm-port-la', size: 5 },
 ];
 
 // Freeway definitions — thick multi-tile paths
@@ -143,50 +154,64 @@ const FREEWAYS: Freeway[] = [
   { name: 'I-210', width: 1, points: [[50,14],[56,12],[62,12],[68,14],[74,16],[80,18],[86,20],[92,22]] },
 ];
 
-// Coastline definition (west and south edges of land)
-// Points define the boundary: everything to the LEFT/BELOW is ocean
+// Coastline definition based on real LA geography
+// The coast runs roughly north-south on the WEST side from Malibu → Santa Monica → Venice → Marina del Rey → LAX → south
+// The Valley, Hollywood Hills, etc. are all INLAND — no ocean to their west
+// Everything LEFT of this boundary AND within the row range is ocean
+//
+// Key reference (from Google Maps satellite):
+// - Malibu/Pacific Palisades coast: around col 14-18, rows 36-44
+// - Santa Monica: col 20, row 46-48
+// - Venice/Marina del Rey: col 22, row 50-56
+// - LAX: col 26-30, row 60-66
+// - El Segundo/Manhattan Beach: col 28, row 66-72
+// - Palos Verdes peninsula: col 40-50, row 80-92 (land jutting into ocean)
+// - San Pedro/Port: col 56-66, row 88-96
 const COASTLINE: [number, number][] = [
-  [18, 0], // NW coast
-  [16, 10],
-  [16, 20],
-  [18, 30],
-  [18, 38],
+  [10, 36],  // Malibu area (only starts at row 36, NOT row 0!)
+  [12, 38],
+  [14, 40],  // Pacific Palisades
   [16, 42],
-  [16, 48], // Santa Monica
-  [16, 52],
-  [18, 56], // Venice
-  [20, 58],
-  [22, 60],
-  [24, 62], // Marina del Rey
-  [26, 64],
-  [28, 66], // Playa Vista
-  [28, 68],
-  [30, 70],
+  [18, 44],
+  [20, 46],  // Santa Monica
+  [20, 48],
+  [22, 50],  // Venice
+  [22, 52],
+  [24, 54],  // Marina del Rey
+  [26, 56],
+  [28, 58],
+  [28, 60],  // Playa del Rey
+  [28, 62],
+  [28, 64],  // LAX west
+  [30, 66],
+  [30, 68],  // El Segundo
+  [32, 70],
   [34, 72],
-  [40, 74],
-  [46, 76],
-  [50, 78],
-  [54, 80],
-  [58, 82],
-  [56, 86],
-  [54, 88], // Palos Verdes
-  [56, 90],
-  [60, 92], // San Pedro
-  [66, 94],
-  [70, 96],
-  [74, 94],
-  [78, 92],
-  [80, 88], // East of port
-  [82, 84],
-  [84, 82],
-  [90, 80],
-  [96, 78],
-  [100, 76],
-  [110, 74],
-  [120, 72],
+  [36, 74],  // Manhattan/Hermosa Beach
+  [38, 76],
+  [40, 78],  // Redondo Beach
+  [42, 80],
+  [40, 82],  // Palos Verdes starts curving west
+  [38, 84],
+  [36, 86],  // PV peninsula tip
+  [38, 88],
+  [42, 90],  // Curving back east
+  [48, 92],
+  [54, 94],  // San Pedro
+  [60, 96],  // Port area south edge
+  [68, 98],
+  [76, 98],  // Long Beach area
+  [84, 96],
+  [92, 94],
+  [100, 92],
+  [110, 90],
+  [120, 88],
 ];
 
 function isOcean(col: number, row: number): boolean {
+  // No ocean north of the coast start (row 36) — the Valley is inland!
+  if (row < 36) return false;
+
   // Left of coastline = ocean
   for (let i = 0; i < COASTLINE.length - 1; i++) {
     const [c1, r1] = COASTLINE[i];
@@ -197,10 +222,8 @@ function isOcean(col: number, row: number): boolean {
       if (col < boundaryCol) return true;
     }
   }
-  // Far south ocean
-  if (row > 96) return true;
-  // Far east ocean (beyond city)
-  if (col > 100 && row > 74) return true;
+  // Far south ocean (below the coastline data)
+  if (row > 98) return true;
   return false;
 }
 
@@ -348,15 +371,16 @@ export function generateMapData(): TileData[][] {
         } else {
           // Buildings
           building = getBuildingForDensity(neighborhood.density, hash);
-          // Beach tiles near coast
-          if (col < 24 && ocean === false && col > 16) {
-            terrain = TileType.SAND;
-            if (hash > 80) building = BuildingType.NONE;
+          // Beach tiles near coast — only south of row 36 where coast exists
+          if (row >= 36 && !ocean) {
+            // Check if adjacent to ocean (1-2 tiles inland from coast)
+            const nearOcean = isOcean(col - 1, row) || isOcean(col - 2, row) || isOcean(col, row + 1);
+            if (nearOcean) {
+              terrain = TileType.SAND;
+              if (hash > 70) building = BuildingType.NONE;
+            }
           }
         }
-      } else if (col > 16 && col < 22 && !ocean) {
-        // Coastal sand strip
-        terrain = TileType.SAND;
       } else {
         // Undeveloped land
         if (hash < 5) building = BuildingType.PARK;

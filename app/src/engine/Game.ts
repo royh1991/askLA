@@ -312,12 +312,15 @@ export class Game {
 
       // Check if this is a landmark with its own sprite
       const landmark = LANDMARKS.find(lm => lm.col === col && lm.row === row && lm.sprite);
-      const lmTexture = landmark?.sprite ? this.textures.get(`/sprites/${landmark.sprite}.png`) : null;
+      const lmSpritePath = landmark?.sprite ?
+        (landmark.sprite.startsWith('bld-') ? `/sprites/${landmark.sprite}.png` : `/sprites/${landmark.sprite}.png`) : null;
+      const lmTexture = lmSpritePath ? this.textures.get(lmSpritePath) : null;
 
       if (lmTexture) {
-        // Render landmark sprite
+        // Render landmark sprite — scale based on landmark size
         const sprite = new Sprite(lmTexture);
-        sprite.scale.set(0.8);
+        const lmScale = landmark!.size >= 5 ? 1.5 : landmark!.size >= 4 ? 1.2 : 0.9;
+        sprite.scale.set(lmScale);
         sprite.anchor.set(0.5, 0.9);
         sprite.x = x;
         sprite.y = y + TILE_HEIGHT / 2 - elev;
