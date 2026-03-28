@@ -1,0 +1,219 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cream: #F5F1EB;
+  --color-cream-dark: #EDE8DF;
+  --color-forest: #2D6A4F;
+  --color-forest-light: #40916C;
+  --color-forest-dark: #1B4332;
+  --color-sage: #A8AD9D;
+  --color-sage-light: #D4D7CD;
+  --color-near-black: #1A1A1A;
+  --color-near-black-light: #2D2D2D;
+  --color-win-blue: #000080;
+  --color-win-blue-light: #0000AA;
+  --color-win-gray: #C0C0C0;
+  --color-win-gray-light: #DFDFDF;
+  --color-win-gray-dark: #808080;
+  --color-win-white: #FFFFFF;
+  --color-vote-aye: #2D6A4F;
+  --color-vote-nay: #C1292E;
+  --color-vote-abstain: #D4A017;
+
+  --font-display: 'Georgia', 'Times New Roman', serif;
+  --font-body: 'Segoe UI', 'Tahoma', 'Geneva', sans-serif;
+  --font-mono: 'Consolas', 'Courier New', 'Lucida Console', monospace;
+}
+
+/* Win98 system font */
+@font-face {
+  font-family: 'MS Sans Serif';
+  src: local('Segoe UI'), local('Tahoma'), local('Geneva');
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font-body);
+  font-size: 12px;
+  cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path d="M0 0L0 14L3 11L6 16L8 15L5 10L9 10Z" fill="black" stroke="white" stroke-width="0.5"/></svg>'), auto;
+}
+
+/* Win98 3D border effects */
+.win-border-raised {
+  border: 2px solid;
+  border-color: #FFFFFF #808080 #808080 #FFFFFF;
+}
+
+.win-border-sunken {
+  border: 2px solid;
+  border-color: #808080 #FFFFFF #FFFFFF #808080;
+}
+
+.win-border-sunken-deep {
+  border: 2px solid;
+  border-color: #404040 #DFDFDF #DFDFDF #404040;
+}
+
+/* Title bar gradient */
+.win-titlebar {
+  background: linear-gradient(90deg, #000080 0%, #1084D0 100%);
+  color: white;
+  font-weight: bold;
+  font-size: 11px;
+  padding: 2px 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  user-select: none;
+}
+
+.win-titlebar-inactive {
+  background: linear-gradient(90deg, #808080 0%, #B0B0B0 100%);
+}
+
+/* Win98 button */
+.win-button {
+  background: #C0C0C0;
+  border: 2px solid;
+  border-color: #FFFFFF #808080 #808080 #FFFFFF;
+  padding: 1px 8px;
+  font-size: 11px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  min-width: 23px;
+  min-height: 21px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.win-button:active {
+  border-color: #808080 #FFFFFF #FFFFFF #808080;
+  padding: 2px 7px 0px 9px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+}
+
+::-webkit-scrollbar-track {
+  background: #C0C0C0;
+  border: 1px solid #808080;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #C0C0C0;
+  border: 2px solid;
+  border-color: #FFFFFF #808080 #808080 #FFFFFF;
+}
+
+::-webkit-scrollbar-button {
+  background: #C0C0C0;
+  border: 2px solid;
+  border-color: #FFFFFF #808080 #808080 #FFFFFF;
+  width: 16px;
+  height: 16px;
+}
+
+/* CRT scan line animation for boot */
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+@keyframes typewriter {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.98; }
+  25%, 75% { opacity: 0.96; }
+}
+
+.crt-flicker {
+  animation: flicker 0.15s infinite;
+}
+
+.cursor-blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* Desktop wallpaper pattern */
+.desktop-pattern {
+  background-color: #008080;
+  background-image:
+    radial-gradient(circle at 25% 25%, rgba(255,255,255,0.03) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(255,255,255,0.03) 0%, transparent 50%);
+}
+
+/* Clippy speech bubble */
+.clippy-bubble {
+  background: #FFFFCC;
+  border: 1px solid #000000;
+  border-radius: 8px;
+  padding: 8px 12px;
+  position: relative;
+  box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  font-size: 11px;
+  max-width: 240px;
+}
+
+.clippy-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  right: 20px;
+  border-width: 10px 10px 0;
+  border-style: solid;
+  border-color: #FFFFCC transparent transparent;
+}
+
+.clippy-bubble::before {
+  content: '';
+  position: absolute;
+  bottom: -12px;
+  right: 19px;
+  border-width: 11px 11px 0;
+  border-style: solid;
+  border-color: #000000 transparent transparent;
+}
+
+/* Bracket header system from spec */
+.bracket-header {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-forest);
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--color-sage);
+  margin-bottom: 8px;
+}
+
+/* Start menu */
+.start-menu {
+  box-shadow: 4px 4px 8px rgba(0,0,0,0.4);
+}
+
+/* Selection highlight */
+::selection {
+  background: #000080;
+  color: #FFFFFF;
+}
