@@ -3,237 +3,160 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-type ClippyPose = 'idle' | 'wave' | 'thinking' | 'excited' | 'reading' | 'sleeping' | 'gavel' | 'pointing';
+type ClippyState = 'idle' | 'wave' | 'think' | 'static';
 
 interface ClippyProps {
   message?: string;
-  pose?: ClippyPose;
   onAsk?: (question: string) => void;
 }
 
-const POSE_FILES: Record<ClippyPose, string> = {
-  idle: '/sprites/clippy-idle.png',
-  wave: '/sprites/clippy-wave.png',
-  thinking: '/sprites/clippy-thinking.png',
-  excited: '/sprites/clippy-excited.png',
-  reading: '/sprites/clippy-reading.png',
-  sleeping: '/sprites/clippy-sleeping.png',
-  gavel: '/sprites/clippy-gavel.png',
-  pointing: '/sprites/clippy-pointing.png',
+// Sprite strip configs: each strip is a horizontal sequence of frames
+const ANIM_STRIPS: Record<string, { src: string; frames: number; width: number; height: number; fps: number }> = {
+  idle: { src: '/sprites/clippy-anim-idle.png', frames: 6, width: 235, height: 768, fps: 4 },
+  wave: { src: '/sprites/clippy-anim-wave.png', frames: 4, width: 352, height: 768, fps: 5 },
+  think: { src: '/sprites/clippy-anim-think.png', frames: 6, width: 235, height: 768, fps: 3 },
 };
 
-// Fallback SVG Clippy if sprites haven't loaded
-function ClippySVG({ pose }: { pose: ClippyPose }) {
-  const eyeY = pose === 'sleeping' ? 18 : 16;
-  const eyeOpen = pose !== 'sleeping';
-  const bodyTilt = pose === 'thinking' ? -5 : pose === 'excited' ? 0 : pose === 'wave' ? 3 : 0;
-  const jumpY = pose === 'excited' ? -5 : 0;
+// Fallback static sprites
+const STATIC_SPRITES: Record<string, string> = {
+  idle: '/sprites/clippy-idle.png',
+  wave: '/sprites/clippy-wave.png',
+  think: '/sprites/clippy-thinking.png',
+};
 
+function SpriteAnimator({ animation, size = 100 }: { animation: string; size?: number }) {
+  const config = ANIM_STRIPS[animation];
+  const [stripLoaded, setStripLoaded] = useState<Record<string, boolean>>({});
+  const [frame, setFrame] = useState(0);
+
+  // Check if strip is available
+  useEffect(() => {
+    if (!config) return;
+    const img = new Image();
+    img.onload = () => setStripLoaded(prev => ({ ...prev, [animation]: true }));
+    img.onerror = () => setStripLoaded(prev => ({ ...prev, [animation]: false }));
+    img.src = config.src;
+  }, [animation, config]);
+
+  // Animate frames
+  useEffect(() => {
+    if (!config || !stripLoaded[animation]) return;
+    const interval = setInterval(() => {
+      setFrame(f => (f + 1) % config.frames);
+    }, 1000 / config.fps);
+    return () => clearInterval(interval);
+  }, [animation, config, stripLoaded]);
+
+  // Use sprite strip animation if available
+  if (config && stripLoaded[animation]) {
+    const scale = size / config.height;
+    const frameWidth = config.width;
+    return (
+      <div
+        style={{
+          width: frameWidth * scale,
+          height: size,
+          backgroundImage: `url(${config.src})`,
+          backgroundSize: `${config.frames * frameWidth * scale}px ${size}px`,
+          backgroundPosition: `-${frame * frameWidth * scale}px 0`,
+          backgroundRepeat: 'no-repeat',
+          imageRendering: 'auto',
+        }}
+      />
+    );
+  }
+
+  // Fallback to static sprite
+  const staticSrc = STATIC_SPRITES[animation] || STATIC_SPRITES.idle;
   return (
-    <motion.svg
-      width="80"
-      height="100"
-      viewBox="0 0 80 100"
-      animate={{ y: jumpY, rotate: bodyTilt }}
-      transition={{ type: 'spring', stiffness: 300, damping: 15 }}
-    >
-      {/* Paperclip body */}
-      <motion.path
-        d="M25 85 L25 30 Q25 15 40 15 Q55 15 55 30 L55 70 Q55 80 45 80 Q35 80 35 70 L35 35 Q35 28 40 28 Q45 28 45 35 L45 65"
-        fill="none"
-        stroke="#808080"
-        strokeWidth="4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      {/* Shine */}
-      <path
-        d="M28 85 L28 32 Q28 18 40 18"
-        fill="none"
-        stroke="#D0D0D0"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      {/* Left eye */}
-      {eyeOpen ? (
-        <g>
-          <ellipse cx="35" cy={eyeY} rx="4" ry="5" fill="white" stroke="#404040" strokeWidth="1" />
-          <circle cx="36" cy={eyeY} r="2" fill="#1A1A1A" />
-          <circle cx="37" cy={eyeY - 1} r="0.7" fill="white" />
-        </g>
-      ) : (
-        <line x1="31" y1={eyeY} x2="39" y2={eyeY} stroke="#404040" strokeWidth="1.5" strokeLinecap="round" />
-      )}
-      {/* Right eye */}
-      {eyeOpen ? (
-        <g>
-          <ellipse cx="47" cy={eyeY} rx="4" ry="5" fill="white" stroke="#404040" strokeWidth="1" />
-          <circle cx="48" cy={eyeY} r="2" fill="#1A1A1A" />
-          <circle cx="49" cy={eyeY - 1} r="0.7" fill="white" />
-        </g>
-      ) : (
-        <line x1="43" y1={eyeY} x2="51" y2={eyeY} stroke="#404040" strokeWidth="1.5" strokeLinecap="round" />
-      )}
-      {/* Eyebrows */}
-      {pose === 'thinking' && (
-        <>
-          <line x1="31" y1="10" x2="38" y2="11" stroke="#404040" strokeWidth="1.5" strokeLinecap="round" />
-          <line x1="44" y1="9" x2="51" y2="12" stroke="#404040" strokeWidth="1.5" strokeLinecap="round" />
-        </>
-      )}
-      {pose === 'excited' && (
-        <>
-          <line x1="32" y1="8" x2="38" y2="10" stroke="#404040" strokeWidth="1.5" strokeLinecap="round" />
-          <line x1="44" y1="10" x2="50" y2="8" stroke="#404040" strokeWidth="1.5" strokeLinecap="round" />
-        </>
-      )}
-      {/* Wave arm */}
-      {pose === 'wave' && (
-        <motion.path
-          d="M55 30 L65 20 L68 10"
-          fill="none"
-          stroke="#808080"
-          strokeWidth="3"
-          strokeLinecap="round"
-          animate={{ rotate: [0, 15, 0, 15, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-          style={{ transformOrigin: '55px 30px' }}
-        />
-      )}
-      {/* Gavel */}
-      {pose === 'gavel' && (
-        <g>
-          <line x1="55" y1="35" x2="70" y2="20" stroke="#8B4513" strokeWidth="2" strokeLinecap="round" />
-          <rect x="65" y="12" width="12" height="8" rx="1" fill="#8B4513" stroke="#5C2D00" strokeWidth="0.5" />
-        </g>
-      )}
-      {/* Reading paper */}
-      {pose === 'reading' && (
-        <g>
-          <rect x="28" y="55" width="24" height="18" rx="1" fill="white" stroke="#808080" strokeWidth="0.5" />
-          <line x1="31" y1="59" x2="49" y2="59" stroke="#C0C0C0" strokeWidth="0.5" />
-          <line x1="31" y1="62" x2="49" y2="62" stroke="#C0C0C0" strokeWidth="0.5" />
-          <line x1="31" y1="65" x2="42" y2="65" stroke="#C0C0C0" strokeWidth="0.5" />
-          <line x1="31" y1="68" x2="46" y2="68" stroke="#C0C0C0" strokeWidth="0.5" />
-        </g>
-      )}
-      {/* Sleeping Z */}
-      {pose === 'sleeping' && (
-        <motion.text
-          x="55" y="8"
-          fontSize="12"
-          fill="#808080"
-          fontWeight="bold"
-          animate={{ opacity: [0, 1, 0], y: [8, 2, -4] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
-          Z
-        </motion.text>
-      )}
-    </motion.svg>
+    <img
+      src={staticSrc}
+      alt="Clippy"
+      style={{ width: size * 0.7, height: size, objectFit: 'contain' }}
+      draggable={false}
+    />
   );
 }
 
-export default function Clippy({ message, pose: externalPose, onAsk }: ClippyProps) {
+export default function Clippy({ message, onAsk }: ClippyProps) {
   const [pos, setPos] = useState({ x: -1, y: -1 });
-  const [currentPose, setCurrentPose] = useState<ClippyPose>(externalPose || 'idle');
+  const [currentAnim, setCurrentAnim] = useState<ClippyState>('idle');
   const [showBubble, setShowBubble] = useState(!!message);
   const [bubbleText, setBubbleText] = useState(message || '');
   const [showInput, setShowInput] = useState(false);
   const [inputText, setInputText] = useState('');
-  const [spriteExists, setSpriteExists] = useState<Record<string, boolean>>({});
   const [idleTimer, setIdleTimer] = useState(0);
   const dragRef = useRef<{ startX: number; startY: number; posX: number; posY: number } | null>(null);
+  const isDragging = useRef(false);
 
-  // Initialize position on mount
+  // Initialize position
   useEffect(() => {
-    setPos({ x: window.innerWidth - 120, y: window.innerHeight - 180 });
+    setPos({ x: window.innerWidth - 140, y: window.innerHeight - 200 });
   }, []);
 
-  // Check which sprites exist
+  // Idle cycle
   useEffect(() => {
-    Object.entries(POSE_FILES).forEach(([pose, src]) => {
-      const img = new Image();
-      img.onload = () => setSpriteExists(prev => ({ ...prev, [pose]: true }));
-      img.onerror = () => setSpriteExists(prev => ({ ...prev, [pose]: false }));
-      img.src = src;
-    });
-  }, []);
-
-  // Idle animation cycle
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIdleTimer(t => t + 1);
-    }, 5000);
+    const interval = setInterval(() => setIdleTimer(t => t + 1), 4000);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
-    if (externalPose) {
-      setCurrentPose(externalPose);
-      return;
-    }
-    // Auto-cycle through idle poses
-    const poses: ClippyPose[] = ['idle', 'idle', 'idle', 'thinking', 'idle', 'reading', 'idle'];
-    if (idleTimer > 12) {
-      setCurrentPose('sleeping');
-    } else {
-      setCurrentPose(poses[idleTimer % poses.length]);
-    }
-  }, [idleTimer, externalPose]);
+    if (showBubble) return; // Don't auto-cycle when showing bubble
+    const cycle: ClippyState[] = ['idle', 'idle', 'idle', 'wave', 'idle', 'think', 'idle', 'idle'];
+    setCurrentAnim(cycle[idleTimer % cycle.length]);
+  }, [idleTimer, showBubble]);
 
+  // Handle external messages
   useEffect(() => {
     if (message) {
       setBubbleText(message);
       setShowBubble(true);
-      setCurrentPose('wave');
+      setCurrentAnim('wave');
       setIdleTimer(0);
+      // Auto-hide after 8 seconds
+      const timeout = setTimeout(() => {
+        setShowBubble(false);
+        setShowInput(false);
+      }, 8000);
+      return () => clearTimeout(timeout);
     }
   }, [message]);
 
-  // Reset idle timer on mouse move
-  useEffect(() => {
-    const handleMove = () => {
-      if (currentPose === 'sleeping') {
-        setCurrentPose('excited');
-        setTimeout(() => setCurrentPose('idle'), 1000);
-      }
-      setIdleTimer(0);
-    };
-    window.addEventListener('mousemove', handleMove);
-    return () => window.removeEventListener('mousemove', handleMove);
-  }, [currentPose]);
-
   const handleDragStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
+    isDragging.current = false;
     dragRef.current = { startX: e.clientX, startY: e.clientY, posX: pos.x, posY: pos.y };
-
     const handleMove = (e: MouseEvent) => {
       if (!dragRef.current) return;
+      const dx = e.clientX - dragRef.current.startX;
+      const dy = e.clientY - dragRef.current.startY;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) isDragging.current = true;
       setPos({
-        x: dragRef.current.posX + (e.clientX - dragRef.current.startX),
-        y: dragRef.current.posY + (e.clientY - dragRef.current.startY),
+        x: Math.max(0, Math.min(window.innerWidth - 100, dragRef.current.posX + dx)),
+        y: Math.max(0, Math.min(window.innerHeight - 140, dragRef.current.posY + dy)),
       });
     };
-
     const handleUp = () => {
       dragRef.current = null;
       window.removeEventListener('mousemove', handleMove);
       window.removeEventListener('mouseup', handleUp);
     };
-
     window.addEventListener('mousemove', handleMove);
     window.addEventListener('mouseup', handleUp);
   }, [pos]);
 
   const handleClick = () => {
-    if (showBubble && !showInput) {
+    if (isDragging.current) return;
+    if (showBubble && showInput) {
+      // Already showing input, close
       setShowBubble(false);
-    } else if (!showBubble) {
-      setBubbleText("It looks like you're exploring LA city government! Need help finding something?");
+      setShowInput(false);
+    } else {
+      // Show prominent ask interface
+      setBubbleText("It looks like you're exploring LA city government! What would you like to know?");
       setShowBubble(true);
       setShowInput(true);
-      setCurrentPose('wave');
+      setCurrentAnim('wave');
       setIdleTimer(0);
     }
   };
@@ -245,73 +168,143 @@ export default function Clippy({ message, pose: externalPose, onAsk }: ClippyPro
       setInputText('');
       setShowInput(false);
       setBubbleText('Let me look that up...');
-      setCurrentPose('thinking');
+      setCurrentAnim('think');
     }
   };
 
   if (pos.x === -1) return null;
 
   return (
-    <div
-      className="fixed select-none"
-      style={{ left: pos.x, top: pos.y, zIndex: 9999 }}
-    >
-      {/* Speech bubble */}
+    <div className="fixed select-none" style={{ left: pos.x, top: pos.y, zIndex: 9999 }}>
+      {/* Speech bubble — prominent XP-style dialog */}
       <AnimatePresence>
         {showBubble && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8, y: 10 }}
+            initial={{ opacity: 0, scale: 0.7, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: 10 }}
-            className="clippy-bubble mb-2"
-            style={{ position: 'absolute', bottom: '100%', right: 0, marginBottom: 8 }}
+            exit={{ opacity: 0, scale: 0.7, y: 20 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+            style={{
+              position: 'absolute',
+              bottom: '100%',
+              right: -20,
+              marginBottom: 12,
+              minWidth: 280,
+              maxWidth: 340,
+            }}
           >
-            <p className="text-[11px] text-[#1A1A1A] leading-[15px]">{bubbleText}</p>
-            {showInput && (
-              <form onSubmit={handleSubmit} className="mt-2 flex gap-1">
-                <input
-                  type="text"
-                  value={inputText}
-                  onChange={e => setInputText(e.target.value)}
-                  className="win-border-sunken-deep bg-white px-1 py-0.5 text-[11px] flex-1 outline-none"
-                  placeholder="Ask me anything..."
-                  autoFocus
-                />
-                <button type="submit" className="win-button text-[10px]">Ask</button>
-              </form>
-            )}
-            <button
-              className="absolute top-1 right-1 text-[9px] text-[#808080] hover:text-[#1A1A1A] leading-none"
-              onClick={(e) => { e.stopPropagation(); setShowBubble(false); setShowInput(false); }}
-            >
-              ✕
-            </button>
+            <div className="relative"
+              style={{
+                background: 'linear-gradient(180deg, #FFFFF0 0%, #FFFFCC 100%)',
+                border: '2px solid #B8860B',
+                borderRadius: 12,
+                boxShadow: '3px 4px 12px rgba(0,0,0,0.35), 0 0 0 1px rgba(184,134,11,0.3)',
+                padding: '12px 14px',
+              }}>
+              {/* Title bar */}
+              <div className="flex items-center gap-2 mb-2 pb-2" style={{ borderBottom: '1px solid rgba(184,134,11,0.2)' }}>
+                <span className="text-[16px]">📎</span>
+                <span className="text-[12px] font-bold text-[#5C4000]">Clippy — Civic Assistant</span>
+                <div className="flex-1" />
+                <button
+                  className="w-[18px] h-[18px] rounded-sm flex items-center justify-center text-[10px] text-[#8B7000] hover:bg-[rgba(184,134,11,0.15)] transition-colors"
+                  onClick={(e) => { e.stopPropagation(); setShowBubble(false); setShowInput(false); }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Message */}
+              <p className="text-[12px] text-[#333] leading-[17px] mb-1">{bubbleText}</p>
+
+              {/* Ask input */}
+              {showInput && (
+                <form onSubmit={handleSubmit} className="mt-3">
+                  <div className="flex gap-1.5">
+                    <input
+                      type="text"
+                      value={inputText}
+                      onChange={e => setInputText(e.target.value)}
+                      className="flex-1 px-2 py-1.5 text-[12px] rounded border-2 outline-none transition-colors"
+                      style={{
+                        borderColor: '#B0C0D0',
+                        background: 'white',
+                      }}
+                      onFocus={e => (e.target.style.borderColor = '#3168D5')}
+                      onBlur={e => (e.target.style.borderColor = '#B0C0D0')}
+                      placeholder="Ask about LA city government..."
+                      autoFocus
+                    />
+                  </div>
+                  <div className="flex gap-1.5 mt-2 justify-end">
+                    <button type="submit" className="xp-button text-[11px] font-bold px-4">
+                      Search
+                    </button>
+                    <button type="button" className="xp-button text-[11px] px-3"
+                      onClick={() => { setShowBubble(false); setShowInput(false); }}>
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* Quick suggestions when input is shown */}
+              {showInput && (
+                <div className="mt-2 pt-2" style={{ borderTop: '1px solid rgba(184,134,11,0.15)' }}>
+                  <div className="text-[9px] text-[#999] mb-1 uppercase tracking-wider">Try asking:</div>
+                  <div className="flex flex-wrap gap-1">
+                    {['rent stabilization', 'transit signal priority', 'who represents Venice?'].map(q => (
+                      <button
+                        key={q}
+                        className="text-[10px] px-2 py-0.5 rounded-full bg-[rgba(184,134,11,0.08)] text-[#6B5000] hover:bg-[rgba(184,134,11,0.18)] transition-colors cursor-pointer border border-[rgba(184,134,11,0.15)]"
+                        onClick={() => { setInputText(q); }}
+                      >
+                        {q}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Speech bubble pointer */}
+            <div style={{
+              position: 'absolute',
+              bottom: -12,
+              right: 35,
+              width: 0,
+              height: 0,
+              borderLeft: '12px solid transparent',
+              borderRight: '12px solid transparent',
+              borderTop: '12px solid #B8860B',
+            }} />
+            <div style={{
+              position: 'absolute',
+              bottom: -9,
+              right: 37,
+              width: 0,
+              height: 0,
+              borderLeft: '10px solid transparent',
+              borderRight: '10px solid transparent',
+              borderTop: '10px solid #FFFFCC',
+            }} />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Clippy character */}
-      <div
+      {/* Clippy character — animated sprite */}
+      <motion.div
         className="cursor-pointer"
         onMouseDown={handleDragStart}
         onClick={handleClick}
         title="Click me for help!"
+        whileHover={{ scale: 1.05 }}
+        animate={currentAnim === 'wave' ? { y: [0, -5, 0] } : {}}
+        transition={{ duration: 0.3 }}
+        style={{ filter: 'drop-shadow(2px 3px 4px rgba(0,0,0,0.3))' }}
       >
-        {spriteExists[currentPose] ? (
-          <motion.img
-            src={POSE_FILES[currentPose]}
-            alt={`Clippy ${currentPose}`}
-            width={80}
-            height={100}
-            className="drop-shadow-lg"
-            animate={currentPose === 'excited' ? { y: [0, -8, 0] } : {}}
-            transition={currentPose === 'excited' ? { duration: 0.4, repeat: 2 } : {}}
-            draggable={false}
-          />
-        ) : (
-          <ClippySVG pose={currentPose} />
-        )}
-      </div>
+        <SpriteAnimator animation={currentAnim === 'static' ? 'idle' : currentAnim} size={110} />
+      </motion.div>
     </div>
   );
 }
