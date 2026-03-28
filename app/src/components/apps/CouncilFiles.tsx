@@ -82,23 +82,23 @@ export default function CouncilFiles() {
   return (
     <div className="flex h-full text-[11px]">
       {/* Menu bar */}
-      <div className="absolute top-0 left-0 right-0 bg-[#C0C0C0] border-b border-[#808080] px-2 py-[2px] flex gap-4 text-[11px] z-10">
-        <span className="hover:bg-[#000080] hover:text-white px-1 cursor-pointer"><u>F</u>ile</span>
-        <span className="hover:bg-[#000080] hover:text-white px-1 cursor-pointer"><u>V</u>iew</span>
-        <span className="hover:bg-[#000080] hover:text-white px-1 cursor-pointer"><u>T</u>rack</span>
-        <span className="hover:bg-[#000080] hover:text-white px-1 cursor-pointer"><u>H</u>elp</span>
+      <div className="absolute top-0 left-0 right-0 bg-[#ECF0F8] border-b border-[#B0C0D0] px-2 py-[2px] flex gap-4 text-[11px] z-10">
+        <span className="hover:bg-[#3168D5] hover:text-white px-1 rounded cursor-pointer"><u>F</u>ile</span>
+        <span className="hover:bg-[#3168D5] hover:text-white px-1 rounded cursor-pointer"><u>V</u>iew</span>
+        <span className="hover:bg-[#3168D5] hover:text-white px-1 rounded cursor-pointer"><u>T</u>rack</span>
+        <span className="hover:bg-[#3168D5] hover:text-white px-1 rounded cursor-pointer"><u>H</u>elp</span>
       </div>
 
       {/* File list (left pane) */}
       <div className="w-[200px] border-r border-[#808080] bg-white overflow-auto mt-[20px]">
-        <div className="bg-[#C0C0C0] px-2 py-1 text-[10px] font-bold border-b border-[#808080]">
+        <div className="bg-[#ECF0F8] px-2 py-1 text-[10px] font-bold border-b border-[#B0C0D0]">
           Council Files ({SAMPLE_FILES.length})
         </div>
         {SAMPLE_FILES.map((f, i) => (
           <div
             key={f.number}
             className={`px-2 py-1.5 cursor-pointer border-b border-[#E0E0E0] ${
-              selectedFile === i ? 'bg-[#000080] text-white' : 'hover:bg-[#E0E0E0]'
+              selectedFile === i ? 'bg-[#3168D5] text-white' : 'hover:bg-[#E8F0F8]'
             }`}
             onClick={() => setSelectedFile(i)}
           >

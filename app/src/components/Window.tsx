@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 
 interface WindowProps {
@@ -40,19 +40,15 @@ export default function Window({
   const [prevState, setPrevState] = useState({ x: initialX, y: initialY, w: initialWidth, h: initialHeight });
   const dragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number } | null>(null);
   const resizeRef = useRef<{ startX: number; startY: number; startW: number; startH: number } | null>(null);
-  const windowRef = useRef<HTMLDivElement>(null);
 
   const handleDragStart = useCallback((e: React.MouseEvent) => {
     if (isMaximized) return;
     e.preventDefault();
     onFocus?.();
     dragRef.current = {
-      startX: e.clientX,
-      startY: e.clientY,
-      startPosX: pos.x,
-      startPosY: pos.y,
+      startX: e.clientX, startY: e.clientY,
+      startPosX: pos.x, startPosY: pos.y,
     };
-
     const handleMove = (e: MouseEvent) => {
       if (!dragRef.current) return;
       setPos({
@@ -60,13 +56,11 @@ export default function Window({
         y: Math.max(0, dragRef.current.startPosY + (e.clientY - dragRef.current.startY)),
       });
     };
-
     const handleUp = () => {
       dragRef.current = null;
       window.removeEventListener('mousemove', handleMove);
       window.removeEventListener('mouseup', handleUp);
     };
-
     window.addEventListener('mousemove', handleMove);
     window.addEventListener('mouseup', handleUp);
   }, [pos, isMaximized, onFocus]);
@@ -76,12 +70,9 @@ export default function Window({
     e.preventDefault();
     e.stopPropagation();
     resizeRef.current = {
-      startX: e.clientX,
-      startY: e.clientY,
-      startW: size.w,
-      startH: size.h,
+      startX: e.clientX, startY: e.clientY,
+      startW: size.w, startH: size.h,
     };
-
     const handleMove = (e: MouseEvent) => {
       if (!resizeRef.current) return;
       setSize({
@@ -89,13 +80,11 @@ export default function Window({
         h: Math.max(200, resizeRef.current.startH + (e.clientY - resizeRef.current.startY)),
       });
     };
-
     const handleUp = () => {
       resizeRef.current = null;
       window.removeEventListener('mousemove', handleMove);
       window.removeEventListener('mouseup', handleUp);
     };
-
     window.addEventListener('mousemove', handleMove);
     window.addEventListener('mouseup', handleUp);
   }, [size, isMaximized]);
@@ -115,56 +104,58 @@ export default function Window({
 
   return (
     <motion.div
-      ref={windowRef}
-      initial={{ scale: 0.9, opacity: 0 }}
+      initial={{ scale: 0.95, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      exit={{ scale: 0.9, opacity: 0 }}
-      transition={{ duration: 0.15, ease: 'easeOut' }}
+      exit={{ scale: 0.95, opacity: 0 }}
+      transition={{ duration: 0.12, ease: 'easeOut' }}
       className="absolute"
-      style={{
-        left: pos.x,
-        top: pos.y,
-        width: size.w,
-        height: size.h,
-        zIndex,
-      }}
+      style={{ left: pos.x, top: pos.y, width: size.w, height: size.h, zIndex }}
       onMouseDown={onFocus}
     >
-      <div className="win-border-raised bg-[#C0C0C0] flex flex-col h-full">
-        {/* Title bar */}
+      <div className={`flex flex-col h-full ${isActive ? 'xp-window xp-window-active' : 'xp-window'}`}>
+        {/* XP Title bar */}
         <div
-          className={`${isActive ? 'win-titlebar' : 'win-titlebar win-titlebar-inactive'}`}
+          className={isActive ? 'xp-titlebar' : 'xp-titlebar xp-titlebar-inactive'}
           onMouseDown={handleDragStart}
           onDoubleClick={handleMaximize}
         >
-          {icon && <span className="text-[14px]">{icon}</span>}
+          {icon && <img src={icon} alt="" className="w-[16px] h-[16px] object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
           <span className="flex-1 truncate">{title}</span>
-          <div className="flex gap-[2px]">
-            <button className="win-button !p-0 !min-w-[16px] !min-h-[14px] text-[10px] leading-none" onClick={onMinimize}>
-              _
+          <div className="flex gap-[2px] items-center">
+            <button className="xp-btn-minimize" onClick={onMinimize} title="Minimize">
+              <svg width="9" height="9" viewBox="0 0 9 9"><rect x="1" y="7" width="7" height="2" fill="white"/></svg>
             </button>
-            <button className="win-button !p-0 !min-w-[16px] !min-h-[14px] text-[10px] leading-none" onClick={handleMaximize}>
-              {isMaximized ? '❐' : '□'}
+            <button className="xp-btn-maximize" onClick={handleMaximize} title={isMaximized ? 'Restore' : 'Maximize'}>
+              {isMaximized ? (
+                <svg width="9" height="9" viewBox="0 0 9 9">
+                  <rect x="2" y="0" width="7" height="7" fill="none" stroke="white" strokeWidth="1.5"/>
+                  <rect x="0" y="2" width="7" height="7" fill="none" stroke="white" strokeWidth="1.5"/>
+                </svg>
+              ) : (
+                <svg width="9" height="9" viewBox="0 0 9 9">
+                  <rect x="0" y="0" width="9" height="9" fill="none" stroke="white" strokeWidth="1.5"/>
+                </svg>
+              )}
             </button>
-            <button className="win-button !p-0 !min-w-[16px] !min-h-[14px] text-[10px] leading-none font-bold" onClick={onClose}>
-              ✕
+            <button className="xp-btn-close" onClick={onClose} title="Close">
+              <svg width="9" height="9" viewBox="0 0 9 9">
+                <line x1="1" y1="1" x2="8" y2="8" stroke="white" strokeWidth="2"/>
+                <line x1="8" y1="1" x2="1" y2="8" stroke="white" strokeWidth="2"/>
+              </svg>
             </button>
           </div>
         </div>
 
         {/* Content area */}
-        <div className="flex-1 overflow-auto bg-white win-border-sunken-deep m-[2px]">
+        <div className="flex-1 overflow-auto bg-white border-x-[3px] border-b-[3px] border-[#0054E3]" style={{ borderColor: isActive ? '#0054E3' : '#7A96DF' }}>
           {children}
         </div>
 
         {/* Resize handle */}
         {!isMaximized && (
           <div
-            className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize"
+            className="absolute bottom-0 right-0 w-5 h-5 cursor-nwse-resize"
             onMouseDown={handleResizeStart}
-            style={{
-              background: 'linear-gradient(135deg, transparent 50%, #808080 50%, #808080 60%, transparent 60%, transparent 70%, #808080 70%, #808080 80%, transparent 80%)',
-            }}
           />
         )}
       </div>

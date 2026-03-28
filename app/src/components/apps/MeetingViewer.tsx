@@ -71,19 +71,19 @@ export default function MeetingViewer() {
   return (
     <div className="p-0 text-[11px]">
       {/* Menu bar */}
-      <div className="bg-[#C0C0C0] border-b border-[#808080] px-2 py-[2px] flex gap-4 text-[11px]">
-        <span className="hover:bg-[#000080] hover:text-white px-1 cursor-pointer"><u>F</u>ile</span>
-        <span className="hover:bg-[#000080] hover:text-white px-1 cursor-pointer"><u>V</u>iew</span>
-        <span className="hover:bg-[#000080] hover:text-white px-1 cursor-pointer"><u>M</u>eeting</span>
-        <span className="hover:bg-[#000080] hover:text-white px-1 cursor-pointer"><u>H</u>elp</span>
+      <div className="bg-[#ECF0F8] border-b border-[#B0C0D0] px-2 py-[2px] flex gap-4 text-[11px]">
+        <span className="hover:bg-[#3168D5] hover:text-white px-1 rounded cursor-pointer"><u>F</u>ile</span>
+        <span className="hover:bg-[#3168D5] hover:text-white px-1 rounded cursor-pointer"><u>V</u>iew</span>
+        <span className="hover:bg-[#3168D5] hover:text-white px-1 rounded cursor-pointer"><u>M</u>eeting</span>
+        <span className="hover:bg-[#3168D5] hover:text-white px-1 rounded cursor-pointer"><u>H</u>elp</span>
       </div>
 
       {/* Toolbar */}
-      <div className="bg-[#C0C0C0] border-b border-[#808080] px-2 py-1 flex gap-1">
-        <button className="win-button text-[10px]">⏮ Prev</button>
-        <button className="win-button text-[10px]">Next ⏭</button>
-        <div className="w-px bg-[#808080] mx-1" />
-        <button className="win-button text-[10px]">▶ Watch Video</button>
+      <div className="bg-[#ECF0F8] border-b border-[#B0C0D0] px-2 py-1 flex gap-1">
+        <button className="xp-button text-[10px]">⏮ Prev</button>
+        <button className="xp-button text-[10px]">Next ⏭</button>
+        <div className="w-px bg-[#B0C0D0] mx-1" />
+        <button className="xp-button text-[10px]">▶ Watch Video</button>
         <div className="flex-1" />
         <span className="text-[10px] text-[#808080] self-center">Meeting ID: m{m.id}</span>
       </div>
