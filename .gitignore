@@ -5,23 +5,21 @@
 # Stripe Projects
 .projects/cache
 .projects/vault
+.projects/state.local.json
+skills-lock.json
 
 # Claude Code local settings
 .claude/settings.local.json
 .claude/ralph-loop.local.md
 .claude/projects/
 
-# Data files (too large for git)
+# Pipeline data files (too large for git)
 audio/
 docs/
 transcripts/
 polished/
-youtube_experiments/yt_captions/transcripts/
-sample_pipeline/output/
-
-# Stripe Projects local state
-.projects/state.local.json
-skills-lock.json
+pipeline/youtube_experiments/yt_captions/transcripts/
+pipeline/sample_pipeline/output/
 
 # Large JSON data files
 all_meetings.json
@@ -44,6 +42,12 @@ __pycache__/
 .venv/
 venv/
 
+# Node / Next.js
+node_modules/
+.next/
+.vercel/
+.turbo/
+
 # OS files
 .DS_Store
 Thumbs.db
@@ -51,9 +55,3 @@ Thumbs.db
 # Backups
 CLAUDE.md.bak
 CLAUDE copy.md
-
-# Node (for future Vercel/Next.js app)
-node_modules/
-.next/
-.vercel/
-.turbo/

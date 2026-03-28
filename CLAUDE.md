@@ -1,8 +1,8 @@
-# askLA — LA City Council Data Pipeline
+# askLA — LA Civic Intelligence Platform
 
 ## What This Is
 
-A pipeline for building a searchable database of LA City Council and committee meetings. Combines three data sources linked by PrimeGov `meeting.id`:
+A civic intelligence platform for Los Angeles, built on a data pipeline that creates a searchable database of LA City Council and committee meetings. Combines three data sources linked by PrimeGov `meeting.id`:
 
 1. **Agenda documents** (10,672 files, 5.7 GB) — HTML/PDF agendas, journals, motions from PrimeGov API (2008-2026)
 2. **YouTube captions** (1,590 transcripts, 20.9M words) — manual CC and auto-generated captions pulled via `youtube-transcript-api` through a Webshare rotating residential proxy
@@ -16,24 +16,28 @@ For **new meetings** where YouTube captions aren't ready yet, there's a direct p
 # Dependencies
 pip install curl_cffi yt-dlp google-genai youtube-transcript-api
 brew install aria2 deno ffmpeg
+npm install  # for the web app (Next.js)
 
 # 1. Download agenda documents
-python scrape_la_council.py --fresh
+python pipeline/scrape_la_council.py --fresh
 
 # 2. Pull YouTube captions for historical meetings (needs Webshare proxy)
-python youtube_experiments/yt_captions/fetch_captions.py
+python pipeline/youtube_experiments/yt_captions/fetch_captions.py
 
 # 3. Clean up captions via Gemini (agenda-aligned structured JSON)
-python sample_pipeline/select_sample.py
-python sample_pipeline/process_sample.py
+python pipeline/sample_pipeline/select_sample.py
+python pipeline/sample_pipeline/process_sample.py
 
 # 4. For NEW meetings (no YT captions yet): direct audio → Gemini
-python pipeline.py --download --meeting-id 17900
-python pipeline.py --process
+python pipeline/pipeline.py --download --meeting-id 17900
+python pipeline/pipeline.py --process
 
 # 5. Build manifest and check status
-python build_manifest.py
-python pipeline.py --status
+python pipeline/build_manifest.py
+python pipeline/pipeline.py --status
+
+# 6. Run the web app
+npm run dev
 ```
 
 ## Architecture
@@ -84,40 +88,36 @@ The PrimeGov `meeting.id` links everything. Every output file includes it:
 ```
 askLA/
 ├── CLAUDE.md                    # this file
-├── .env                         # API keys (GEMINI_API_KEY, GROQ_API_KEY)
+├── project_spec.md              # product spec for the web app
+├── .env                         # API keys (GEMINI_API_KEY, GROQ_API_KEY, DB, Chroma, Vercel)
 ├── .yt-cookies.txt              # exported YouTube cookies
 │
-├── scrape_la_council.py         # PrimeGov API → docs/
-├── download_audio.py            # YouTube audio downloader (yt-dlp + aria2c)
-├── process_meeting.py           # Gemini: audio → structured JSON + transcript
-├── batch_processing.py          # Gemini Batch API (50% discount, 24h turnaround)
-├── pipeline.py                  # orchestrator: download + process + manifest
-├── build_manifest.py            # generates manifest.json from filesystem
+├── app/                         # Next.js App Router (pages, layouts)
+├── components/                  # React components (Clippy, VoteCard, Map, etc.)
+├── lib/                         # DB queries, Chroma client, LLM utils
+├── public/                      # Static assets, Clippy sprites, favicon
+├── styles/                      # CSS Modules for retro personality layer
+├── package.json                 # Next.js / TypeScript / Tailwind
+├── tailwind.config.ts
+├── next.config.ts
 │
-├── youtube_experiments/
-│   └── yt_captions/
-│       ├── fetch_captions.py    # youtube-transcript-api + Webshare proxy → captions
-│       ├── progress.json        # tracks completed meeting IDs
-│       └── transcripts/         # 1,590 raw caption files (m{id}_*.txt + .meta.json)
-│
-├── sample_pipeline/
-│   ├── select_sample.py         # select meetings with both captions + agenda
-│   ├── process_sample.py        # send to Gemini for cleanup
-│   ├── prompt_v2.py             # the Gemini cleanup prompt (agenda-aligned)
-│   ├── sample_plan.json         # selected meetings
-│   └── output/                  # cleaned structured JSON per meeting
+├── pipeline/                    # Python data pipeline
+│   ├── scrape_la_council.py     # PrimeGov API → docs/
+│   ├── download_audio.py        # YouTube audio downloader (yt-dlp + aria2c)
+│   ├── process_meeting.py       # Gemini: audio → structured JSON + transcript
+│   ├── batch_processing.py      # Gemini Batch API (50% discount, 24h turnaround)
+│   ├── pipeline.py              # orchestrator: download + process + manifest
+│   ├── build_manifest.py        # generates manifest.json from filesystem
+│   ├── sample_pipeline/         # Gemini caption cleanup
+│   └── youtube_experiments/     # YouTube caption fetching
 │
 ├── all_meetings.json            # PrimeGov metadata (~13 MB, 10,698 meetings)
 ├── manifest.json                # universal index: meeting_id → all file paths
-├── download_progress.json       # doc_ids already downloaded
-├── audio_progress.json          # meeting_ids with downloaded audio
 │
 ├── audio/                       # YouTube audio (98 files, 6.5 GB)
 ├── docs/                        # 10,672 agenda documents (5.7 GB)
 ├── transcripts/                 # Gemini audio output (.json + .txt)
-├── batches/                     # Gemini batch job state files
-│
-└── archive/                     # old experiments (whisper, yt-dlp subs, etc.)
+└── batches/                     # Gemini batch job state files
 ```
 
 ## Scripts Reference
@@ -127,9 +127,9 @@ askLA/
 Downloads agendas, journals, and motions from the PrimeGov API.
 
 ```bash
-python scrape_la_council.py              # incremental (default)
-python scrape_la_council.py --fresh      # re-fetch metadata, download new docs only
-python scrape_la_council.py --redownload # re-download everything
+python pipeline/scrape_la_council.py              # incremental (default)
+python pipeline/scrape_la_council.py --fresh      # re-fetch metadata, download new docs only
+python pipeline/scrape_la_council.py --redownload # re-download everything
 ```
 
 Idempotent. Progress tracked in `download_progress.json`.
@@ -139,11 +139,11 @@ Idempotent. Progress tracked in `download_progress.json`.
 Pulls captions from YouTube via `youtube-transcript-api` with Webshare rotating residential proxy. Covers all meetings 2023+ that have YouTube videos.
 
 ```bash
-python youtube_experiments/yt_captions/fetch_captions.py                    # all 2023-2026
-python youtube_experiments/yt_captions/fetch_captions.py --years 2025 2026  # specific years
-python youtube_experiments/yt_captions/fetch_captions.py --meeting-id 17900 # single meeting
-python youtube_experiments/yt_captions/fetch_captions.py --stats            # show stats
-python youtube_experiments/yt_captions/fetch_captions.py --dry-run          # preview
+python pipeline/youtube_experiments/yt_captions/fetch_captions.py                    # all 2023-2026
+python pipeline/youtube_experiments/yt_captions/fetch_captions.py --years 2025 2026  # specific years
+python pipeline/youtube_experiments/yt_captions/fetch_captions.py --meeting-id 17900 # single meeting
+python pipeline/youtube_experiments/yt_captions/fetch_captions.py --stats            # show stats
+python pipeline/youtube_experiments/yt_captions/fetch_captions.py --dry-run          # preview
 ```
 
 Idempotent. Progress tracked in `progress.json`. Skips meetings already fetched (including permanent failures like "no captions available").
@@ -157,11 +157,11 @@ Idempotent. Progress tracked in `progress.json`. Skips meetings already fetched 
 Takes raw YouTube captions + HTML agenda → produces structured JSON aligned by agenda item.
 
 ```bash
-python sample_pipeline/select_sample.py                    # select meetings with both inputs
-python sample_pipeline/process_sample.py                   # process all pending
-python sample_pipeline/process_sample.py --meeting-id 17585  # single meeting
-python sample_pipeline/process_sample.py --dry-run         # preview + cost estimate
-python sample_pipeline/process_sample.py --stats           # show completion stats
+python pipeline/sample_pipeline/select_sample.py                    # select meetings with both inputs
+python pipeline/sample_pipeline/process_sample.py                   # process all pending
+python pipeline/sample_pipeline/process_sample.py --meeting-id 17585  # single meeting
+python pipeline/sample_pipeline/process_sample.py --dry-run         # preview + cost estimate
+python pipeline/sample_pipeline/process_sample.py --stats           # show completion stats
 ```
 
 **Output format** (per meeting JSON):
@@ -196,8 +196,8 @@ python sample_pipeline/process_sample.py --stats           # show completion sta
 For new meetings where you need the actual audio file (e.g., for direct Gemini processing).
 
 ```bash
-python download_audio.py export-cookies        # export Chrome cookies for parallel use
-python download_audio.py download VIDEO_ID     # download one video
+python pipeline/download_audio.py export-cookies        # export Chrome cookies for parallel use
+python pipeline/download_audio.py download VIDEO_ID     # download one video
 ```
 
 Uses aria2c for multi-connection downloads, deno for YouTube JS challenges.
@@ -218,28 +218,28 @@ python process_meeting.py audio/m17900_*.mp3 --meeting-id 17900 # embed meeting_
 50% cost savings, 24-hour turnaround. Three phases: prepare → submit → retrieve.
 
 ```bash
-python pipeline.py --batch-prepare --date-range 2025-01-01:2025-12-31 --submit
-python pipeline.py --batch-status batches/batch_TIMESTAMP.json
-python pipeline.py --batch-retrieve batches/batch_TIMESTAMP.json
+python pipeline/pipeline.py --batch-prepare --date-range 2025-01-01:2025-12-31 --submit
+python pipeline/pipeline.py --batch-status batches/batch_TIMESTAMP.json
+python pipeline/pipeline.py --batch-retrieve batches/batch_TIMESTAMP.json
 ```
 
 ### pipeline.py — Orchestrator
 
 ```bash
-python pipeline.py --status                                    # manifest stats
-python pipeline.py --run --date-range 2026-03-01:2026-03-31   # download + process
-python pipeline.py --run --meeting-id 17900                    # single meeting
-python pipeline.py --download --date-range 2026-01-01:2026-03-31  # audio only
-python pipeline.py --process                                   # process unprocessed audio
-python pipeline.py --housing-report                            # housing analysis
-python pipeline.py --rebuild-manifest                          # rebuild manifest.json
+python pipeline/pipeline.py --status                                    # manifest stats
+python pipeline/pipeline.py --run --date-range 2026-03-01:2026-03-31   # download + process
+python pipeline/pipeline.py --run --meeting-id 17900                    # single meeting
+python pipeline/pipeline.py --download --date-range 2026-01-01:2026-03-31  # audio only
+python pipeline/pipeline.py --process                                   # process unprocessed audio
+python pipeline/pipeline.py --housing-report                            # housing analysis
+python pipeline/pipeline.py --rebuild-manifest                          # rebuild manifest.json
 ```
 
 ### build_manifest.py — Manifest Generator
 
 ```bash
-python build_manifest.py         # full rebuild
-python build_manifest.py --stats # print statistics
+python pipeline/build_manifest.py         # full rebuild
+python pipeline/build_manifest.py --stats # print statistics
 ```
 
 ## Data Pipeline: Recommended Workflows
@@ -248,16 +248,16 @@ python build_manifest.py --stats # print statistics
 
 ```bash
 # Option A: Direct Gemini processing (richer output, $0.35/meeting)
-python scrape_la_council.py --fresh
-python pipeline.py --download --date-range 2026-03-20:2026-03-31
-python pipeline.py --process
-python build_manifest.py
+python pipeline/scrape_la_council.py --fresh
+python pipeline/pipeline.py --download --date-range 2026-03-20:2026-03-31
+python pipeline/pipeline.py --process
+python pipeline/build_manifest.py
 
 # Option B: Wait for YouTube captions (free, then $0.003 cleanup)
-python scrape_la_council.py --fresh
-python youtube_experiments/yt_captions/fetch_captions.py --years 2026
-python sample_pipeline/select_sample.py
-python sample_pipeline/process_sample.py
+python pipeline/scrape_la_council.py --fresh
+python pipeline/youtube_experiments/yt_captions/fetch_captions.py --years 2026
+python pipeline/sample_pipeline/select_sample.py
+python pipeline/sample_pipeline/process_sample.py
 ```
 
 ### For bulk historical (already done for 2023-2026)
@@ -265,8 +265,8 @@ python sample_pipeline/process_sample.py
 YouTube captions already pulled for 1,590 meetings. To clean them up:
 
 ```bash
-python sample_pipeline/select_sample.py    # select meetings with agenda + caption
-python sample_pipeline/process_sample.py   # send to Gemini (~$3 for 1,000 meetings)
+python pipeline/sample_pipeline/select_sample.py    # select meetings with agenda + caption
+python pipeline/sample_pipeline/process_sample.py   # send to Gemini (~$3 for 1,000 meetings)
 ```
 
 ## YouTube Caption Quality Notes

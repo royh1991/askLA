@@ -14,7 +14,7 @@ The platform serves a spectrum from a resident who has never attended a council 
 
 **Reference sites**: [cabagges.world](https://cabagges.world/) for warmth, editorial quality, organic personality. [trychroma.com](https://www.trychroma.com/) for the selective terminal aesthetic in data/diagrams. askLA lives in between: **a beautifully art-directed civic magazine with a retro-terminal soul in its data layer.**
 
-The warmth and generosity comes from Cabbages — the cream backgrounds, the breathing room, the rounded images, the sense that someone who cares designed this. The technical personality comes from Chroma — the bracket-prefixed section headers, the monospace data presentation, the ASCII-flavored diagrams, the code-as-content confidence. The mascot and animations add the playful layer that neither reference has.
+The warmth and generosity comes from Cabbages — the cream backgrounds, the breathing room, the rounded images, the sense that someone who cares designed this. The technical personality comes from Chroma — the bracket-prefixed section headers, the monospace data presentation, the ASCII-flavored diagrams, the code-as-content confidence. Clippy and the animations add the playful layer that neither reference has.
 
 **The vibe: warm and inviting on the surface, terminal-precise in the data, playful throughout.** City government is dry enough — the tool that makes it accessible should have the warmth of a neighborhood restaurant and the rigor of a research database.
 
@@ -27,7 +27,7 @@ The warmth and generosity comes from Cabbages — the cream backgrounds, the bre
 
 - **Color palette**:
   - *Base*: Warm cream/off-white background (Cabbages' #F5F1EB range). Not white. Not gray. Warm paper.
-  - *Primary accent*: A rich, saturated green — civic and organic. Inspired by both the Cabbages forest green and LA's city seal. Used for links, active states, the mascot, and key CTAs.
+  - *Primary accent*: A rich, saturated green — civic and organic. Inspired by both the Cabbages forest green and LA's city seal. Used for links, active states, and key CTAs.
   - *Secondary*: Soft sage/olive for backgrounds on callout cards, the newsletter/alert signup, filter pills. The quiet green.
   - *Dark sections*: Select sections flip to near-black background with light text (Chroma's bottom-half treatment). Used for the data-dense views: vote matrices, coalition maps, transcript deep-dives. Creates rhythm and signals "you're in the data now."
   - *Status*: Green (passed/aye), warm red (failed/nay), amber (pending/abstain). High contrast on both light and dark backgrounds.
@@ -57,7 +57,7 @@ The warmth and generosity comes from Cabbages — the cream backgrounds, the bre
 
 - **Navigation (Cabbages-inspired)**:
   - Top bar is minimal: logo left, search center, 2-3 nav items right. Sparse, confident, not cluttered.
-  - The real navigation lives in cross-links (every entity mention is a link), the search bar, the mascot, and a Cabbages-style mega-footer with organized text columns.
+  - The real navigation lives in cross-links (every entity mention is a link), the search bar, Clippy, and a Cabbages-style mega-footer with organized text columns.
   - Filters use small rounded pills in sage green (like Cabbages' "Lunch x" tag). Dismissable with an x.
 
 ### Motion & Animation
@@ -65,48 +65,46 @@ The warmth and generosity comes from Cabbages — the cream backgrounds, the bre
 The personality layer. Intentional, characterful, never blocking.
 
 - **Page transitions**: Content panels ease in with a gentle slide-up (200ms). Not instant, not slow — smooth and satisfying. Sections within a page stagger in slightly on first load.
-- **Loading states**: The mascot animates during waits. Short wait: blinks, looks around. Medium wait: shuffles papers, taps foot. Long wait: pulls out a tiny newspaper and reads it. A thin green progress bar runs across the top of the viewport (like YouTube's red bar, but green).
+- **Loading states**: Clippy animates during waits. Short wait: blinks, looks around. Medium wait: taps on the screen border, shuffles a tiny stack of papers. Long wait: pulls out a tiny newspaper and reads it, occasionally peeking over the top. A thin green progress bar runs across the top of the viewport (like YouTube's red bar, but green).
 - **Hover states**: Elements respond warmly. Table rows get a soft cream highlight. Buttons press down slightly (1px translate). Links underline with a left-to-right wipe. Council member photos scale up slightly (1.02x) on hover. Cards lift with a subtle shadow increase.
 - **Vote reveals**: The roll call animates member by member, left to right, with 80ms stagger. AYE appears in green, NAY in red — each with a small pop. Close votes: the last 3 members appear slower (tension). The final tally counts up with a satisfying snap.
 - **Search**: Typing triggers a subtle CRT-scan-line animation across the search bar. Results stagger in top-to-bottom with a gentle fade+slide (50ms between each). The result count types out: "23 results across 14 meetings."
 - **Data viz**: Charts draw on scroll-into-view (the classic D3 enter animation). The voting alignment network uses a force-directed simulation with gentle physics — nodes drift and settle, draggable, with connection lines that flex. Topic fingerprint bars fill left-to-right on first view.
 - **The timeline**: On council file pages, the timeline events appear sequentially as you scroll, like chapters unfolding. Past events are solid, the pending/future event pulses gently.
-- **Easter eggs**: Konami code on the home page triggers something (TBD — maybe all council member photos become pixel art for 10 seconds). Searching "clippy" makes the mascot do a backflip. Triple-clicking the status bar reveals the longest public comment ever recorded. Discovered and shared — they make people love the product.
-- **Sound** (optional, off by default): A toggle in the status bar. When on: soft click on navigation, typewriter keystroke during search, a gavel tap when a vote result appears, a cheerful chime on the weekly digest notification. All subtle, all optional. The mascot can have a voice (short text-to-speech snippets) if enabled.
+- **Easter eggs**: Konami code on the home page triggers something (TBD — maybe all council member photos become pixel art for 10 seconds). Searching "clippy" makes Clippy do a backflip and wink. Triple-clicking the status bar reveals the longest public comment ever recorded. Discovered and shared — they make people love the product.
+- **Sound** (optional, off by default): A toggle in the status bar. When on: soft click on navigation, typewriter keystroke during search, a gavel tap when a vote result appears, a cheerful chime on the weekly digest notification. All subtle, all optional. Clippy can have a voice (short text-to-speech snippets) if enabled.
 
-### The Mascot: City Hall Hal
+### The Mascot: Clippy (Yes, That Clippy)
 
-A pixel-art animated character that lives in the app. Inspired by Clippy, Bonzi Buddy, and the Microsoft Office assistants — but actually useful and not annoying.
+It's Clippy. The actual paperclip. Reimagined for civic data.
 
-**Appearance**: A small pixel-art character themed around LA civic life. Could be:
-- A miniature LA City Hall building with eyes and little legs (the building itself as a character)
-- A cartoon city clerk with round glasses and a stack of papers
-- An anthropomorphized microphone (representing public comment)
-- A friendly pigeon (LA's actual most common bird, always present at city hall)
+The original Microsoft Office Clippy was annoying because it interrupted you with help you didn't ask for. askLA's Clippy is the opposite — it sits quietly until you need it, and when you do, it's backed by an LLM with the entire public record of LA city government. The nostalgia is the hook; the utility is the reason people keep it on.
 
-Whatever the form: expressive, 32x32 or 48x48 pixel base with multiple animation states, rendered in a sprite sheet. Think the detail level of a high-quality pixel art game character.
+**Appearance**: A faithful recreation of the classic Clippy — the bent paperclip with expressive eyes and eyebrows. Same proportions, same wire-frame body, same ability to emote with just two eyes and a piece of bent metal. Rendered as a high-quality sprite sheet with smooth animations. Not a "modern reinterpretation" — the real thing, lovingly recreated. The only askLA-specific touch: Clippy occasionally holds a tiny LA city seal, a small gavel, or a rolled-up agenda document.
 
 **Behavior**:
 - **Draggable**: Lives in the bottom-right by default. Drag it anywhere. It remembers where you put it. If you drag it to the edge of the screen, it peeks around the corner.
 - **Idle animations**: Blinks, shuffles papers, looks around, occasionally taps on the screen border, falls asleep if you haven't interacted in 5 minutes (wakes up when you move the mouse).
-- **Contextual reactions**: On a vote page, it holds up a scorecard. On a meeting page, it sits in a tiny chair. On the map, it rides a tiny bus between districts. When search returns no results, it shrugs. When a contradictory statement is found, it does a double-take.
-- **Ask it questions**: Click the mascot (or press a hotkey) to open a small chat bubble. This is a lightweight entry point to the Ask/LLM interface — you can ask quick questions without navigating to `/ask`. The mascot "speaks" the answer in a speech bubble with the retro pixel-font. For longer answers, it opens the full Ask page.
-- **Tooltips and hints**: When you hover over a complex UI element, the mascot offers a one-line explanation in its speech bubble: "That's the voting alignment network — click a member to see who they vote with!" This replaces traditional tooltips with something that has character.
-- **Celebrations**: When you follow your first council file, the mascot throws confetti. When you set your address, it waves a tiny flag. When you share something, it gives a thumbs up. Small, delightful, not obnoxious.
+- **Contextual reactions**: On a vote page, Clippy holds up a tiny scorecard. On a meeting page, it sits in a tiny chair. On the map, it rides a tiny bus between districts. When search returns no results, it shrugs and its wire body droops. When a contradictory statement is found, it does a double-take — eyebrows shooting up, body springing straight. Classic Clippy expressiveness.
+- **Ask it questions**: Click Clippy (or press a hotkey) to open the classic yellow speech bubble. "It looks like you're researching a council file! Want me to summarize it?" — except this time, it actually can. This is a lightweight entry point to the Ask/LLM interface — quick questions get answered right in the bubble. For longer answers, it opens the full Ask page. The speech bubble has the same slightly-rounded rectangle and drop shadow as the original Office assistant bubble.
+- **Tooltips and hints**: When you hover over a complex UI element, Clippy offers a one-line explanation: "That's the voting alignment network — click a member to see who they vote with!" The classic "Would you like help with that?" energy, but genuinely useful because it knows the app.
+- **Celebrations**: When you follow your first council file, Clippy does its classic excited bounce. When you set your address, it taps the screen approvingly. When you share something, it gives a thumbs up (bending its wire body into a thumb shape). Small, delightful, nostalgic.
 - **Dismissable**: A toggle in settings (or in the status bar) to hide the mascot entirely. Power users who find it distracting can turn it off. It should never block content or slow down the interface.
 
-**Implementation**: CSS sprite sheet animation + a small React component with position state (persisted to localStorage). The mascot's contextual behavior is driven by the current route and page state. The chat bubble uses the same LLM backend as `/ask` but with a shorter, more casual system prompt ("answer in 1-2 sentences, be friendly and brief").
+**Implementation**: CSS sprite sheet animation + a small React component with position state (persisted to localStorage). Clippy's contextual behavior is driven by the current route and page state. The chat bubble uses the same LLM backend as `/ask` but with a shorter, more casual system prompt ("You are Clippy, the helpful paperclip assistant for askLA. Answer in 1-2 sentences, be friendly and brief. Occasionally start with 'It looks like you're...' for nostalgia.")
+
+**The meta-joke**: The original Clippy was the most hated UI element in software history because it offered help nobody wanted. askLA's Clippy is the redemption arc — it's the same character, but now it's backed by an AI that actually understands the content, answers real questions, and knows when to shut up. The nostalgia gets people to try it. The usefulness gets them to keep it on.
 
 ### Fun Features & Collectibles
 
-Beyond the mascot, the retro theme opens up small engagement hooks:
+Beyond Clippy, the retro theme opens up small engagement hooks:
 
 - **Stickers**: When you find something interesting (a contradictory statement, a surprising vote, a broken promise), you can "sticker" it — adding a small annotation visible to other users. Stickers are pixel-art stamps: a red flag, a gold star, a question mark, a magnifying glass. The most-stickered items surface on the home page.
 - **Your civic profile**: If you create an account, you get a profile page showing your activity — searches, followed files, council files you tracked to completion. Purely optional, but gives a sense of ongoing relationship with the platform.
 - **Achievement badges**: "Attended your first meeting" (after clicking through to a meeting page and reading >50% of the transcript). "Followed 5 council files." "Asked a question the record couldn't answer." These are pixel-art badges displayed on your profile. Whimsical, not gamified — no points, no leaderboards, just small acknowledgments of civic engagement.
-- **"Today in LA Council History"**: A daily card on the home page showing something interesting from the same date in a past year. "On this day in 2019, the council voted 14-1 to ban fur sales in LA. Council Member Buscaino was the lone dissent. He said..." Link to the meeting page. The mascot presents this with a little "did you know?" animation.
-- **Seasonal themes**: The mascot wears a tiny Santa hat in December. During election season, it holds an "I Voted" sticker. On the anniversary of a major council vote, it holds a tiny cake. Subtle, discoverable, shareable.
-- **Custom cursor**: A small pixel-art pointer that changes based on context — default arrow normally, magnifying glass during search, speech bubble when hovering over the mascot, a tiny gavel on vote pages. Toggleable in settings.
+- **"Today in LA Council History"**: A daily card on the home page showing something interesting from the same date in a past year. "On this day in 2019, the council voted 14-1 to ban fur sales in LA. Council Member Buscaino was the lone dissent. He said..." Link to the meeting page. Clippy presents this with a "did you know?" bounce.
+- **Seasonal themes**: Clippy wears a tiny Santa hat in December. During election season, it holds an "I Voted" sticker. On the anniversary of a major council vote, it holds a tiny cake. Subtle, discoverable, shareable.
+- **Custom cursor**: A small pixel-art pointer that changes based on context — default arrow normally, magnifying glass during search, speech bubble when hovering over Clippy, a tiny gavel on vote pages. Toggleable in settings.
 - **Status bar personality**: The bottom status bar occasionally rotates in small facts: "10,698 meetings indexed · longest meeting ever: 8h 42m (Budget & Finance, Jun 2023) · 20.9M words transcribed". These rotate slowly and are just... interesting. Clicking one links to the relevant data.
 
 ---
@@ -158,8 +156,9 @@ Every page shares the same shell:
 │                      Page Content                           │
 │                                                             │
 │                                          ┌──────────┐      │
-│                                          │ ◉◉  Hal  │      │
-│                                          │  ╰──╯    │      │
+│                                          ┌──────────┐      │
+│                                          │  📎      │      │
+│                                          │ Clippy   │      │
 │                                          │ 💬 Ask me!│      │
 │                                          └──────────┘      │
 ├─────────────────────────────────────────────────────────────┤
@@ -170,12 +169,12 @@ Every page shares the same shell:
 - **Search bar**: Always visible. Accepts anything. Typing triggers a barcode-scanner animation across the bar. Results stagger in with a typewriter effect.
 - **Three nav items**: Map (geographic entry), Council (people entry). The Ask function is accessed through the mascot — it's always with you.
 - **Breadcrumbs**: Always show where you are. Each segment is clickable. Styled like a file path in a terminal: `Home / Meetings / Housing Committee 3.25.26`
-- **Hal** (the mascot): Floating in the bottom-right, draggable anywhere. Click to open the quick-ask chat bubble. Reacts to the page you're on. Dismissable via settings.
+- **Clippy**: Floating in the bottom-right, draggable anywhere. Click to open the classic yellow speech bubble for quick questions. Reacts to the page you're on. Dismissable via settings.
 - **Status bar**: Bottom of viewport. Shows data freshness and rotating fun facts. Sound toggle icon on the right.
 
 ### The Principle
 
-There are no "modes." There is no role selector. There is one app with one navigation. A resident and an attorney see the same council file page — the page is just deep enough that both find what they need. The resident reads the plain-language summary at the top, maybe asks Hal a question, and stops. The attorney scrolls past it to the full legislative intent timeline and exports it for litigation. Same page, different depths. The mascot offers contextual help everywhere — it's the beginner's guide AND the power user's shortcut.
+There are no "modes." There is no role selector. There is one app with one navigation. A resident and an attorney see the same council file page — the page is just deep enough that both find what they need. The resident reads the plain-language summary at the top, maybe asks Clippy a question, and stops. The attorney scrolls past it to the full legislative intent timeline and exports it for litigation. Same page, different depths. The mascot offers contextual help everywhere — it's the beginner's guide AND the power user's shortcut.
 
 ---
 
@@ -850,22 +849,44 @@ Each transcript section is split into ~500-token passages. Each chunk is embedde
 
 ## Tech Stack
 
+### Core
+
 | Layer | Technology | Rationale |
 |-------|-----------|-----------|
-| **Framework** | Next.js 15 (App Router) | Vercel-native, RSC for data-heavy pages |
+| **Language** | TypeScript | Non-negotiable at this scale — types across API, DB queries, and frontend |
+| **Framework** | Next.js 15 (App Router) | Vercel-native, React Server Components for data-heavy pages, no WASM needed — heavy compute (Postgres, Chroma, LLM) is all server-side |
 | **Hosting** | Vercel | Already provisioned via Stripe Projects |
-| **Database** | Neon Postgres (serverless) | Free tier, edge-compatible, branching for dev/prod |
+| **Database** | Neon Postgres (serverless) | Free tier, edge-compatible via `@neondatabase/serverless`, branching for dev/prod |
 | **Vector DB** | Chroma Cloud | Already provisioned, hosted, managed |
-| **LLM (chat)** | Claude or Gemini Flash | Synthesis and Q&A with citation |
+| **ORM** | Drizzle | Type-safe, lightweight, good Neon/serverless support |
+
+### Styling & UI
+
+| Layer | Technology | Rationale |
+|-------|-----------|-----------|
+| **CSS framework** | Tailwind CSS | Layout, spacing, responsive, and the 90% of CSS that's plumbing. Custom `tailwind.config` with full design tokens: cream bg, forest green, dark panel color, three font families (display/body/mono), 12-16px border radius, spacing scale |
+| **Character styles** | CSS Modules | The retro personality layer that Tailwind can't express: bracket-prefixed `[■]` section headers, Clippy speech bubble, CRT scan-line animation, vote reveal stagger, terminal-panel borders, custom cursor states |
+| **Animation** | Framer Motion | Vote reveal staggers, page transitions, Clippy idle/reaction animations, chart enter animations, timeline scroll reveals. Declarative, composable, works with React Server Components |
+| **Charts** | D3 / Observable Plot | Maximum control over the retro aesthetic — the voting alignment force graph, topic timeseries, district heatmaps. No chart-library chrome to fight against |
+| **Maps** | Mapbox GL JS | Custom retro tile style, council district boundaries as thick vector lines, data layers for topics/projects |
+| **Clippy** | Sprite sheet + React component | CSS sprite sheet animation, draggable with position persisted to localStorage, contextual behavior driven by route/page state |
+
+### Backend & Data
+
+| Layer | Technology | Rationale |
+|-------|-----------|-----------|
+| **LLM (chat/Clippy)** | Claude or Gemini Flash | Synthesis and Q&A with citation, grounded in retrieved transcript chunks |
 | **LLM (ingestion)** | Gemini Flash | Already used in pipeline — structured transcript cleanup |
 | **Embeddings** | Gemini text-embedding or OpenAI ada-002 | For Chroma ingestion |
-| **Maps** | Mapbox GL JS | Custom retro style, council district boundaries, data layers |
-| **Charts** | D3 / Observable Plot | Maximum control over retro aesthetic, no chart-library chrome |
-| **Search** | Chroma (semantic) + Postgres pg_trgm/tsvector (exact) | Hybrid: semantic for concepts, full-text for identifiers |
+| **Search** | Chroma (semantic) + Postgres pg_trgm/tsvector (exact) | Hybrid: semantic for concepts, full-text for identifiers like council file numbers |
 | **Auth** | Clerk or NextAuth | If needed for saved preferences, watchlists, alerts |
 | **Notifications** | Resend (email) + Twilio (SMS) + custom webhooks | Multi-channel alert delivery |
 | **API** | Next.js API routes + tRPC or Hono | Typed API for both internal frontend and external consumers |
 | **Background jobs** | Vercel Cron + Inngest or Trigger.dev | Transcript ingestion, alert processing, digest generation |
+
+### Why Not WASM
+
+There's no compute-heavy client-side work. The heavy lifting is all server-side: Postgres queries, Chroma vector search, LLM calls, transcript processing. The client renders the results. React Server Components handle the data-fetching pages, and the interactive pieces (Clippy, map, charts, vote animations) are standard client React + D3 + Framer Motion. WASM would add build complexity for zero benefit.
 
 ---
 
