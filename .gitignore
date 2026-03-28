@@ -1,0 +1,59 @@
+# Secrets & credentials
+.env
+.yt-cookies.txt
+
+# Stripe Projects
+.projects/cache
+.projects/vault
+
+# Claude Code local settings
+.claude/settings.local.json
+.claude/ralph-loop.local.md
+.claude/projects/
+
+# Data files (too large for git)
+audio/
+docs/
+transcripts/
+polished/
+youtube_experiments/yt_captions/transcripts/
+sample_pipeline/output/
+
+# Stripe Projects local state
+.projects/state.local.json
+skills-lock.json
+
+# Large JSON data files
+all_meetings.json
+manifest.json
+download_progress.json
+audio_progress.json
+sample_plan.json
+
+# Batch state
+batches/
+
+# Experiments / archive
+whisper_experiments/
+vibe/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backups
+CLAUDE.md.bak
+CLAUDE copy.md
+
+# Node (for future Vercel/Next.js app)
+node_modules/
+.next/
+.vercel/
+.turbo/
