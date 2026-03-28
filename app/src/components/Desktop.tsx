@@ -7,7 +7,7 @@ import Clippy from './Clippy';
 import MeetingCalendar from './apps/MeetingCalendar';
 import CouncilFiles from './apps/CouncilFiles';
 import Terminal from './apps/Terminal';
-import DistrictMap from './apps/DistrictMap';
+import SimCityApp from '../engine/SimCityApp';
 
 interface OpenWindow {
   id: string;
@@ -33,7 +33,7 @@ const WINDOW_CONFIGS: Record<string, { title: string; icon: string; width: numbe
   meetings: { title: 'Meeting Calendar — 7,427 Meetings (2008-2026)', icon: '/sprites/icon-meetings.png', width: 900, height: 620 },
   files: { title: 'Council Files Explorer', icon: '/sprites/icon-files.png', width: 760, height: 520 },
   terminal: { title: 'askLA Terminal — Ask the Public Record', icon: '/sprites/icon-terminal.png', width: 700, height: 460 },
-  map: { title: 'LA District Map — CityOS', icon: '/sprites/icon-map.png', width: 850, height: 600 },
+  map: { title: 'SimCity LA — Interactive District Map', icon: '/sprites/icon-map.png', width: 950, height: 650 },
   recycle: { title: 'Killed Motions', icon: '/sprites/icon-recycle.png', width: 420, height: 360 },
   spec: { title: 'Project Specification — askLA', icon: '/sprites/icon-spec.png', width: 660, height: 510 },
 };
@@ -142,7 +142,7 @@ export default function Desktop() {
               {win.id === 'meetings' && <MeetingCalendar />}
               {win.id === 'files' && <CouncilFiles />}
               {win.id === 'terminal' && <Terminal />}
-              {win.id === 'map' && <DistrictMap />}
+              {win.id === 'map' && <SimCityApp />}
               {win.id === 'recycle' && <RecycleBin />}
               {win.id === 'spec' && <SpecViewer />}
             </Window>
