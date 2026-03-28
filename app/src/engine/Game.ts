@@ -44,6 +44,26 @@ const BUILDING_SPRITES: Record<number, { src: string; scale: number; anchorY: nu
   [BuildingType.STADIUM]: { src: '/sprites/bld-commercial.png', scale: 1.1, anchorY: 0.85 },
 };
 
+// Extra sprite variety — randomly pick from these for visual diversity
+const BUILDING_VARIANTS: Record<number, { src: string; scale: number; anchorY: number }[]> = {
+  [BuildingType.APARTMENT_HIGH]: [
+    { src: '/sprites/bld-apartment.png', scale: 1.0, anchorY: 0.9 },
+    { src: '/sprites/bld-highrise.png', scale: 0.8, anchorY: 0.9 },
+  ],
+  [BuildingType.OFFICE_MID]: [
+    { src: '/sprites/bld-skyscraper.png', scale: 0.7, anchorY: 0.9 },
+    { src: '/sprites/bld-office-glass.png', scale: 0.7, anchorY: 0.9 },
+  ],
+  [BuildingType.INDUSTRIAL]: [
+    { src: '/sprites/bld-industrial.png', scale: 0.8, anchorY: 0.9 },
+    { src: '/sprites/bld-warehouse.png', scale: 0.8, anchorY: 0.9 },
+  ],
+  [BuildingType.PARK]: [
+    { src: '/sprites/bld-park.png', scale: 0.9, anchorY: 0.85 },
+    { src: '/sprites/bld-palm-trees.png', scale: 0.7, anchorY: 0.85 },
+  ],
+};
+
 export type DistrictSelectCallback = (districtId: number | null) => void;
 
 export class Game {
@@ -276,7 +296,13 @@ export class Game {
 
     // Render back to front (lower row = further away = render first)
     for (const { col, row, tile } of buildingsToRender) {
-      const config = BUILDING_SPRITES[tile.building];
+      // Pick sprite config — use variant if available for visual diversity
+      const variants = BUILDING_VARIANTS[tile.building];
+      let config = BUILDING_SPRITES[tile.building];
+      if (variants && variants.length > 0) {
+        const variantIdx = ((col * 31 + row * 17) % (variants.length + 1));
+        if (variantIdx < variants.length) config = variants[variantIdx];
+      }
       if (!config) continue;
 
       const texture = this.textures.get(config.src);
