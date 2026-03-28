@@ -10,11 +10,11 @@ interface ClippyProps {
   onAsk?: (question: string) => void;
 }
 
-// Sprite strip configs: each strip is a horizontal sequence of frames
-const ANIM_STRIPS: Record<string, { src: string; frames: number; width: number; height: number; fps: number }> = {
-  idle: { src: '/sprites/clippy-anim-idle.png', frames: 6, width: 235, height: 768, fps: 4 },
-  wave: { src: '/sprites/clippy-anim-wave.png', frames: 4, width: 352, height: 768, fps: 5 },
-  think: { src: '/sprites/clippy-anim-think.png', frames: 6, width: 235, height: 768, fps: 3 },
+// Sprite strip configs: each strip is a horizontal sequence of 200x200 frames
+const ANIM_STRIPS: Record<string, { src: string; frames: number; frameW: number; frameH: number; fps: number }> = {
+  idle: { src: '/sprites/clippy-anim-idle.png', frames: 4, frameW: 200, frameH: 200, fps: 3 },
+  wave: { src: '/sprites/clippy-anim-wave.png', frames: 4, frameW: 200, frameH: 200, fps: 4 },
+  think: { src: '/sprites/clippy-anim-think.png', frames: 4, frameW: 200, frameH: 200, fps: 2 },
 };
 
 // Fallback static sprites
@@ -49,18 +49,18 @@ function SpriteAnimator({ animation, size = 100 }: { animation: string; size?: n
 
   // Use sprite strip animation if available
   if (config && stripLoaded[animation]) {
-    const scale = size / config.height;
-    const frameWidth = config.width;
+    const scale = size / config.frameH;
+    const fw = config.frameW * scale;
+    const totalW = config.frames * fw;
     return (
       <div
         style={{
-          width: frameWidth * scale,
+          width: fw,
           height: size,
           backgroundImage: `url(${config.src})`,
-          backgroundSize: `${config.frames * frameWidth * scale}px ${size}px`,
-          backgroundPosition: `-${frame * frameWidth * scale}px 0`,
+          backgroundSize: `${totalW}px ${size}px`,
+          backgroundPosition: `-${frame * fw}px 0`,
           backgroundRepeat: 'no-repeat',
-          imageRendering: 'auto',
         }}
       />
     );
