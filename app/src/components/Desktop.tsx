@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Window from './Window';
 import Clippy from './Clippy';
-import MeetingViewer from './apps/MeetingViewer';
+import MeetingCalendar from './apps/MeetingCalendar';
 import CouncilFiles from './apps/CouncilFiles';
 import Terminal from './apps/Terminal';
 import DistrictMap from './apps/DistrictMap';
@@ -30,7 +30,7 @@ const DESKTOP_ICONS = [
 ];
 
 const WINDOW_CONFIGS: Record<string, { title: string; icon: string; width: number; height: number }> = {
-  meetings: { title: 'Meeting Viewer — Transportation Committee 3/11/26', icon: '/sprites/icon-meetings.png', width: 720, height: 560 },
+  meetings: { title: 'Meeting Calendar — 7,427 Meetings (2008-2026)', icon: '/sprites/icon-meetings.png', width: 900, height: 620 },
   files: { title: 'Council Files Explorer', icon: '/sprites/icon-files.png', width: 760, height: 520 },
   terminal: { title: 'askLA Terminal — Ask the Public Record', icon: '/sprites/icon-terminal.png', width: 700, height: 460 },
   map: { title: 'LA District Map — CityOS', icon: '/sprites/icon-map.png', width: 850, height: 600 },
@@ -139,7 +139,7 @@ export default function Desktop() {
               onMinimize={() => minimizeWindow(win.id)}
               zIndex={getZIndex(win.id)}
             >
-              {win.id === 'meetings' && <MeetingViewer />}
+              {win.id === 'meetings' && <MeetingCalendar />}
               {win.id === 'files' && <CouncilFiles />}
               {win.id === 'terminal' && <Terminal />}
               {win.id === 'map' && <DistrictMap />}

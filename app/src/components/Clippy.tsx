@@ -195,15 +195,15 @@ export default function Clippy({ message, onAsk }: ClippyProps) {
           ease: 'easeInOut',
         }}
         whileHover={{ scale: 1.08 }}
-        style={{ filter: 'drop-shadow(2px 3px 6px rgba(0,0,0,0.25))' }}
+        style={{ filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.9)) drop-shadow(0 0 3px rgba(255,255,255,0.7)) drop-shadow(2px 3px 6px rgba(0,0,0,0.3))' }}
       >
         {/* Layer both open and blink images, crossfade for blink */}
-        <div style={{ position: 'relative', width: 120, height: 120 }}>
+        <div style={{ position: 'relative', width: 140, height: 140 }}>
           <motion.img
             src="/sprites/clippy-main.png"
             alt="Clippy"
-            width={120}
-            height={120}
+            width={140}
+            height={140}
             style={{ position: 'absolute', top: 0, left: 0 }}
             animate={{ opacity: isBlinking ? 0 : 1 }}
             transition={{ duration: 0.06 }}
@@ -212,8 +212,8 @@ export default function Clippy({ message, onAsk }: ClippyProps) {
           <motion.img
             src="/sprites/clippy-blink.png"
             alt="Clippy blinking"
-            width={120}
-            height={120}
+            width={140}
+            height={140}
             style={{ position: 'absolute', top: 0, left: 0 }}
             animate={{ opacity: isBlinking ? 1 : 0 }}
             transition={{ duration: 0.06 }}
