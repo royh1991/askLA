@@ -320,7 +320,7 @@ function DesktopIcon({ src, fallback }: { src: string; fallback: string }) {
     <img
       src={src}
       alt=""
-      className="w-[48px] h-[48px] object-contain drop-shadow-lg"
+      className="w-[56px] h-[56px] object-contain drop-shadow-lg"
       onError={() => setFailed(true)}
       draggable={false}
     />
