@@ -134,41 +134,7 @@ export function createSimCityBuildingLayer(data: any) {
   });
 }
 
-// === SIMCITY LANDMARK SPRITES ===
-// Billboard sprites that always face the camera — the isometric 3D look
-// is baked into the art itself. Large and always visible.
-
-interface SimCityLandmark {
-  name: string;
-  position: [number, number]; // [lng, lat]
-  image: string;
-  pixelSize: number; // size in pixels on screen
-}
-
-const SIMCITY_LANDMARKS: SimCityLandmark[] = [
-  { name: 'LAX', position: [-118.4085, 33.9416], image: '/sprites/landmarks/lax-simcity.png', pixelSize: 240 },
-  // More landmarks added here as generated
-];
-
+// Landmark overlays — placeholder for future implementation
 export function createLandmarkOverlays(): any[] {
-  return [
-    new IconLayer({
-      id: 'simcity-landmarks',
-      data: SIMCITY_LANDMARKS,
-      pickable: true,
-      billboard: true, // Always face camera — preserves isometric 3D look
-      getIcon: (d: SimCityLandmark) => ({
-        url: d.image,
-        width: 991,
-        height: 873,
-        anchorY: 873, // Bottom of sprite sits at the position
-      }),
-      getPosition: (d: SimCityLandmark) => [...d.position, 50] as [number, number, number], // 50m altitude so it floats above map
-      getSize: (d: SimCityLandmark) => d.pixelSize,
-      sizeUnits: 'pixels' as const,
-      sizeMinPixels: 120, // Always visible even at overview zoom
-      sizeMaxPixels: 600,
-      alphaCutoff: 0.05, // Clean transparency edges
-    }),
-  ];
+  return [];
 }
