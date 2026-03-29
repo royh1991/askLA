@@ -7,7 +7,7 @@ import type { MapRef } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import { MAP_STYLE } from './mapStyle';
-import { createDistrictLayer } from './layers';
+import { createDistrictLayer, createLandmarkLayer } from './layers';
 import { DISTRICTS, type DistrictInfo } from './districtData';
 import districtsGeoJson from '../data/la-districts.json';
 
@@ -61,6 +61,7 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
       handleDistrictClick,
       handleDistrictHover,
     ),
+    createLandmarkLayer(),
   ], [selectedDistrictId, hoveredDistrictId, handleDistrictClick, handleDistrictHover]);
 
   // Add 3D buildings after map loads

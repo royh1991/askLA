@@ -1,4 +1,4 @@
-import { GeoJsonLayer } from '@deck.gl/layers';
+import { GeoJsonLayer, IconLayer } from '@deck.gl/layers';
 
 const DISTRICT_COLORS: Record<number, [number, number, number]> = {
   1: [76, 175, 80], 2: [33, 150, 243], 3: [255, 152, 0], 4: [156, 39, 176],
@@ -50,5 +50,38 @@ export function createDistrictLayer(
       getLineColor: [selectedId, hoveredId],
       getLineWidth: [selectedId, hoveredId],
     },
+  });
+}
+
+// SimCity-style landmark sprites placed at real geographic coordinates
+interface LandmarkData {
+  name: string;
+  coordinates: [number, number]; // [lng, lat]
+  icon: string; // path to sprite image
+  size: number; // pixel size on screen
+}
+
+const LANDMARKS: LandmarkData[] = [
+  { name: 'LAX', coordinates: [-118.4085, 33.9416], icon: '/sprites/landmarks/lax-simcity.png', size: 280 },
+  // More landmarks will be added here as they're generated
+];
+
+export function createLandmarkLayer() {
+  return new IconLayer({
+    id: 'simcity-landmarks',
+    data: LANDMARKS,
+    pickable: true,
+    getIcon: (d: LandmarkData) => ({
+      url: d.icon,
+      width: 991,
+      height: 873,
+      anchorY: 873,
+    }),
+    getPosition: (d: LandmarkData) => d.coordinates,
+    getSize: (d: LandmarkData) => d.size,
+    sizeUnits: 'pixels' as const,
+    sizeMinPixels: 80,
+    sizeMaxPixels: 500,
+    billboard: false, // Render flat on the map surface, not facing camera
   });
 }
