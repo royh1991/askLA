@@ -2,12 +2,9 @@ import { Application, Container, Graphics, Sprite, Assets, Text, TextStyle, Fede
 
 export type DistrictSelectCallback = (districtId: number | null) => void;
 
-// Terrain grid: 10 cols x 7 rows of 512x512 tiles
-const TILE_SIZE = 512;
-const GRID_COLS = 10;
-const GRID_ROWS = 7;
-const MAP_PX_W = GRID_COLS * TILE_SIZE; // 5120
-const MAP_PX_H = GRID_ROWS * TILE_SIZE; // 3584
+// Base map dimensions (Gemini 16:9)
+const MAP_W = 1408;
+const MAP_H = 768;
 
 // Neighborhood sprites overlaid on the terrain
 interface HoodSprite {
@@ -18,32 +15,77 @@ interface HoodSprite {
   district: number;
 }
 
-// Positions mapped to the 10x7 terrain grid (5120x3584 total)
+// Positions on 1408x768 base map
 const HOOD_SPRITES: HoodSprite[] = [
-  // Downtown — center-right, row 3-4 area
-  { name: 'Downtown', src: '/sprites/hoods/downtown.png', x: 3100, y: 1700, scale: 0.7, district: 9 },
-  // Hollywood — center, row 2 area
-  { name: 'Hollywood', src: '/sprites/hoods/hollywood.png', x: 2500, y: 1100, scale: 0.6, district: 13 },
-  // Beverly Hills — left-center, row 2-3
-  { name: 'Beverly Hills', src: '/sprites/hoods/beverly-hills.png', x: 1900, y: 1200, scale: 0.5, district: 5 },
-  // Venice Beach — far left, row 4
-  { name: 'Venice Beach', src: '/sprites/hoods/venice-beach.png', x: 900, y: 2000, scale: 0.5, district: 11 },
-  // LAX — left, row 5
-  { name: 'LAX', src: '/sprites/hoods/lax-airport.png', x: 1200, y: 2600, scale: 0.7, district: 11 },
-  // San Fernando Valley — center, row 1
-  { name: 'San Fernando Valley', src: '/sprites/hoods/valley-suburban.png', x: 2000, y: 600, scale: 0.7, district: 3 },
-  // Koreatown — center, row 3
-  { name: 'Koreatown', src: '/sprites/hoods/koreatown.png', x: 2600, y: 1500, scale: 0.45, district: 4 },
-  // Port of LA — center-right, row 6
-  { name: 'Port of LA', src: '/sprites/hoods/port-la.png', x: 2900, y: 3100, scale: 0.65, district: 15 },
-  // Santa Monica — left, row 3-4
-  { name: 'Santa Monica', src: '/sprites/hoods/santa-monica.png', x: 800, y: 1600, scale: 0.5, district: 11 },
-  // Highland Park — right, row 2
-  { name: 'Highland Park', src: '/sprites/hoods/highland-park.png', x: 3500, y: 1200, scale: 0.45, district: 1 },
-  // South LA — center, row 4-5
-  { name: 'South LA', src: '/sprites/hoods/south-la.png', x: 2700, y: 2200, scale: 0.6, district: 8 },
-  // Arts District — right of downtown, row 3
-  { name: 'Arts District', src: '/sprites/hoods/arts-district.png', x: 3500, y: 1650, scale: 0.4, district: 14 },
+  { name: 'Downtown', src: '/sprites/hoods/downtown.png', x: 850, y: 460, scale: 0.42, district: 9 },
+  { name: 'Hollywood', src: '/sprites/hoods/hollywood.png', x: 620, y: 250, scale: 0.35, district: 13 },
+  { name: 'Beverly Hills', src: '/sprites/hoods/beverly-hills.png', x: 480, y: 280, scale: 0.3, district: 5 },
+  { name: 'Venice Beach', src: '/sprites/hoods/venice-beach.png', x: 250, y: 430, scale: 0.3, district: 11 },
+  { name: 'LAX', src: '/sprites/hoods/lax-airport.png', x: 350, y: 560, scale: 0.38, district: 11 },
+  { name: 'San Fernando Valley', src: '/sprites/hoods/valley-suburban.png', x: 480, y: 130, scale: 0.4, district: 3 },
+  { name: 'Koreatown', src: '/sprites/hoods/koreatown.png', x: 700, y: 380, scale: 0.25, district: 4 },
+  { name: 'Port of LA', src: '/sprites/hoods/port-la.png', x: 820, y: 680, scale: 0.35, district: 15 },
+  { name: 'Santa Monica', src: '/sprites/hoods/santa-monica.png', x: 240, y: 340, scale: 0.28, district: 11 },
+  { name: 'Highland Park', src: '/sprites/hoods/highland-park.png', x: 950, y: 300, scale: 0.25, district: 1 },
+  { name: 'South LA', src: '/sprites/hoods/south-la.png', x: 750, y: 550, scale: 0.35, district: 8 },
+  { name: 'Arts District', src: '/sprites/hoods/arts-district.png', x: 930, y: 430, scale: 0.22, district: 14 },
+];
+
+// 50 landmarks with positions on 1408x768 base map
+interface LandmarkSprite {
+  name: string; src: string; x: number; y: number; scale: number;
+}
+const LANDMARK_SPRITES: LandmarkSprite[] = [
+  { name: 'City Hall', src: '/sprites/landmarks/city-hall.png', x: 840, y: 420, scale: 0.35 },
+  { name: 'Capitol Records', src: '/sprites/landmarks/capitol-records.png', x: 630, y: 260, scale: 0.2 },
+  { name: 'US Bank Tower', src: '/sprites/landmarks/us-bank-tower.png', x: 860, y: 440, scale: 0.3 },
+  { name: 'Disney Concert Hall', src: '/sprites/landmarks/disney-concert-hall.png', x: 830, y: 430, scale: 0.25 },
+  { name: 'The Broad', src: '/sprites/landmarks/the-broad.png', x: 845, y: 425, scale: 0.18 },
+  { name: 'LACMA', src: '/sprites/landmarks/lacma.png', x: 580, y: 350, scale: 0.2 },
+  { name: 'Watts Towers', src: '/sprites/landmarks/watts-towers.png', x: 800, y: 600, scale: 0.2 },
+  { name: 'Union Station', src: '/sprites/landmarks/union-station.png', x: 870, y: 400, scale: 0.22 },
+  { name: 'Dodger Stadium', src: '/sprites/landmarks/dodger-stadium.png', x: 890, y: 350, scale: 0.35 },
+  { name: 'SoFi Stadium', src: '/sprites/landmarks/sofi-stadium.png', x: 500, y: 570, scale: 0.3 },
+  { name: 'Crypto Arena', src: '/sprites/landmarks/crypto-arena.png', x: 810, y: 470, scale: 0.22 },
+  { name: 'Hollywood Bowl', src: '/sprites/landmarks/hollywood-bowl.png', x: 590, y: 230, scale: 0.22 },
+  { name: 'Greek Theatre', src: '/sprites/landmarks/greek-theatre.png', x: 660, y: 220, scale: 0.2 },
+  { name: 'Hollywood Sign', src: '/sprites/landmarks/hollywood-sign.png', x: 620, y: 190, scale: 0.3 },
+  { name: 'Griffith Observatory', src: '/sprites/landmarks/griffith-observatory.png', x: 680, y: 210, scale: 0.25 },
+  { name: 'Chinese Theatre', src: '/sprites/landmarks/chinese-theatre.png', x: 610, y: 270, scale: 0.18 },
+  { name: 'Getty Center', src: '/sprites/landmarks/getty-center.png', x: 380, y: 250, scale: 0.25 },
+  { name: 'Beverly Center', src: '/sprites/landmarks/beverly-center.png', x: 530, y: 340, scale: 0.18 },
+  { name: 'The Grove', src: '/sprites/landmarks/the-grove.png', x: 560, y: 360, scale: 0.18 },
+  { name: 'Santa Monica Pier', src: '/sprites/landmarks/santa-monica-pier.png', x: 210, y: 370, scale: 0.25 },
+  { name: 'Venice Canals', src: '/sprites/landmarks/venice-canals.png', x: 260, y: 450, scale: 0.2 },
+  { name: 'Echo Park Lake', src: '/sprites/landmarks/echo-park-lake.png', x: 790, y: 340, scale: 0.2 },
+  { name: 'UCLA', src: '/sprites/landmarks/ucla-royce-hall.png', x: 420, y: 320, scale: 0.22 },
+  { name: 'USC', src: '/sprites/landmarks/usc-tommy-trojan.png', x: 780, y: 490, scale: 0.2 },
+  { name: 'Bradbury Building', src: '/sprites/landmarks/bradbury-building.png', x: 855, y: 445, scale: 0.15 },
+  { name: 'Central Library', src: '/sprites/landmarks/central-library.png', x: 835, y: 450, scale: 0.18 },
+  { name: 'Rose Bowl', src: '/sprites/landmarks/rose-bowl.png', x: 980, y: 230, scale: 0.28 },
+  { name: 'Memorial Coliseum', src: '/sprites/landmarks/memorial-coliseum.png', x: 790, y: 500, scale: 0.25 },
+  { name: 'Angels Flight', src: '/sprites/landmarks/angels-flight.png', x: 845, y: 435, scale: 0.12 },
+  { name: 'La Brea Tar Pits', src: '/sprites/landmarks/la-brea-tar-pits.png', x: 570, y: 355, scale: 0.2 },
+  { name: 'The Wiltern', src: '/sprites/landmarks/the-wiltern.png', x: 640, y: 370, scale: 0.15 },
+  { name: 'Pantages Theatre', src: '/sprites/landmarks/pantages-theatre.png', x: 640, y: 275, scale: 0.15 },
+  { name: 'El Capitan', src: '/sprites/landmarks/el-capitan-theatre.png', x: 615, y: 275, scale: 0.15 },
+  { name: 'Convention Center', src: '/sprites/landmarks/convention-center.png', x: 820, y: 480, scale: 0.22 },
+  { name: 'Olvera Street', src: '/sprites/landmarks/olvera-street.png', x: 865, y: 405, scale: 0.15 },
+  { name: 'Pershing Square', src: '/sprites/landmarks/pershing-square.png', x: 850, y: 450, scale: 0.15 },
+  { name: 'Runyon Canyon', src: '/sprites/landmarks/runyon-canyon.png', x: 580, y: 230, scale: 0.2 },
+  { name: 'Mulholland', src: '/sprites/landmarks/mulholland-overlook.png', x: 500, y: 200, scale: 0.2 },
+  { name: 'Santa Monica Place', src: '/sprites/landmarks/santa-monica-place.png', x: 225, y: 360, scale: 0.18 },
+  { name: '3rd St Promenade', src: '/sprites/landmarks/third-street-promenade.png', x: 230, y: 350, scale: 0.15 },
+  { name: 'LAX Theme Bldg', src: '/sprites/landmarks/lax-theme-building.png', x: 340, y: 555, scale: 0.2 },
+  { name: 'The Forum', src: '/sprites/landmarks/forum-inglewood.png', x: 480, y: 560, scale: 0.22 },
+  { name: 'Cathedral', src: '/sprites/landmarks/cathedral-our-lady.png', x: 840, y: 410, scale: 0.18 },
+  { name: 'Chateau Marmont', src: '/sprites/landmarks/chateau-marmont.png', x: 570, y: 280, scale: 0.15 },
+  { name: 'Roosevelt Hotel', src: '/sprites/landmarks/roosevelt-hotel.png', x: 625, y: 268, scale: 0.15 },
+  { name: 'Grand Central Mkt', src: '/sprites/landmarks/grand-central-market.png', x: 850, y: 440, scale: 0.15 },
+  { name: 'Griffith Park', src: '/sprites/landmarks/griffith-park-ranger.png', x: 700, y: 200, scale: 0.2 },
+  { name: 'Crenshaw Mall', src: '/sprites/landmarks/crenshaw-mall.png', x: 680, y: 510, scale: 0.18 },
+  { name: 'LAX Full', src: '/sprites/landmarks/lax-airport-full.png', x: 360, y: 570, scale: 0.35 },
+  { name: 'Port of LA', src: '/sprites/landmarks/port-of-la.png', x: 830, y: 690, scale: 0.3 },
 ];
 
 // District data for sidebar
@@ -80,8 +122,8 @@ export class Game {
   private overlayLayer!: Container;
   private labelLayer!: Container;
 
-  private camX = 0; private camY = 0; private camZ = 0.22;
-  private tgtX = 0; private tgtY = 0; private tgtZ = 0.22;
+  private camX = 0; private camY = 0; private camZ = 0.85;
+  private tgtX = 0; private tgtY = 0; private tgtZ = 0.85;
   private dragging = false; private dragSX = 0; private dragSY = 0;
   private dragCX = 0; private dragCY = 0; private dragMoved = false;
 
@@ -111,31 +153,14 @@ export class Game {
     this.world.addChild(this.labelLayer);
     this.app.stage.addChild(this.world);
 
-    // Load terrain grid tiles
-    for (let row = 0; row < GRID_ROWS; row++) {
-      for (let col = 0; col < GRID_COLS; col++) {
-        const src = `/sprites/terrain/t-${col}-${row}.png`;
-        try {
-          const tex = await Assets.load(src);
-          const sprite = new Sprite(tex);
-          sprite.x = col * TILE_SIZE;
-          sprite.y = row * TILE_SIZE;
-          sprite.width = TILE_SIZE;
-          sprite.height = TILE_SIZE;
-          this.terrainLayer.addChild(sprite);
-        } catch {
-          // Missing tile — draw placeholder
-          const g = new Graphics();
-          const placeholderColor = row < 1 ? 0x5A6B3F : row >= 5 ? 0x1A5276 : 0x3D8B37;
-          g.fill({ color: placeholderColor });
-          g.rect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-          g.fill();
-          this.terrainLayer.addChild(g);
-        }
-      }
-    }
+    // Load base topographical map (Gemini-generated, no buildings)
+    try {
+      const baseTex = await Assets.load('/map-base.png');
+      const baseSprite = new Sprite(baseTex);
+      this.terrainLayer.addChild(baseSprite);
+    } catch { console.warn('Base map not loaded'); }
 
-    // Load neighborhood sprites
+    // Load neighborhood sprites on top
     for (const hood of HOOD_SPRITES) {
       try {
         const tex = await Assets.load(hood.src);
@@ -148,9 +173,24 @@ export class Game {
       } catch { /* not available */ }
     }
 
-    // Center on downtown area
-    this.tgtX = this.camX = w / 2 - 3100 * this.camZ;
-    this.tgtY = this.camY = h / 2 - 1700 * this.camZ;
+    // Load landmark sprites on top
+    const landmarkLayer = new Container();
+    this.world.addChildAt(landmarkLayer, 2); // between hoods and overlay
+    for (const lm of LANDMARK_SPRITES) {
+      try {
+        const tex = await Assets.load(lm.src);
+        const sprite = new Sprite(tex);
+        sprite.anchor.set(0.5, 0.9);
+        sprite.x = lm.x;
+        sprite.y = lm.y;
+        sprite.scale.set(lm.scale);
+        this.hoodLayer.addChild(sprite);
+      } catch { /* not generated yet */ }
+    }
+
+    // Center on downtown
+    this.tgtX = this.camX = w / 2 - 850 * this.camZ;
+    this.tgtY = this.camY = h / 2 - 460 * this.camZ;
 
     // Input handlers
     this.app.stage.eventMode = 'static';
@@ -199,29 +239,27 @@ export class Game {
   private renderLabels() {
     // Neighborhood labels — SimCity 4 style floating signs
     const hoodStyle = new TextStyle({
-      fontFamily: 'Segoe UI, Tahoma, sans-serif', fontSize: 28,
+      fontFamily: 'Segoe UI, Tahoma, sans-serif', fontSize: 11,
       fill: 0x1A1A1A, fontWeight: 'bold',
     });
 
     for (const h of HOOD_SPRITES) {
-      // Sign background
-      const textWidth = h.name.length * 16 + 30;
-      const signY = h.y - h.scale * 300 - 40;
+      const textWidth = h.name.length * 6.5 + 14;
+      const signY = h.y - h.scale * 280 - 16;
       const bg = new Graphics();
       bg.fill({ color: 0xD0E0E8, alpha: 0.9 });
-      bg.roundRect(h.x - textWidth / 2, signY, textWidth, 36, 6);
+      bg.roundRect(h.x - textWidth / 2, signY, textWidth, 16, 3);
       bg.fill();
-      bg.setStrokeStyle({ width: 1.5, color: 0x8090A0, alpha: 0.6 });
-      bg.roundRect(h.x - textWidth / 2, signY, textWidth, 36, 6);
+      bg.setStrokeStyle({ width: 1, color: 0x8090A0, alpha: 0.5 });
+      bg.roundRect(h.x - textWidth / 2, signY, textWidth, 16, 3);
       bg.stroke();
-      // Pole
-      bg.setStrokeStyle({ width: 2, color: 0x808080 });
-      bg.moveTo(h.x, signY + 36); bg.lineTo(h.x, h.y - h.scale * 200);
+      bg.setStrokeStyle({ width: 1, color: 0x808080 });
+      bg.moveTo(h.x, signY + 16); bg.lineTo(h.x, h.y - h.scale * 120);
       bg.stroke();
       this.labelLayer.addChild(bg);
 
       const t = new Text({ text: h.name, style: hoodStyle });
-      t.anchor.set(0.5); t.x = h.x; t.y = signY + 18;
+      t.anchor.set(0.5); t.x = h.x; t.y = signY + 8;
       this.labelLayer.addChild(t);
     }
   }
@@ -233,9 +271,9 @@ export class Game {
   zoomIn() { this.tgtZ = Math.min(1.5, this.tgtZ + 0.05); }
   zoomOut() { this.tgtZ = Math.max(0.08, this.tgtZ - 0.05); }
   resetView() {
-    this.tgtX = this.w / 2 - 3100 * 0.22;
-    this.tgtY = this.h / 2 - 1700 * 0.22;
-    this.tgtZ = 0.22;
+    this.tgtX = (this.w - MAP_W * 0.85) / 2;
+    this.tgtY = (this.h - MAP_H * 0.85) / 2;
+    this.tgtZ = 0.85;
   }
   destroy() { this.app.destroy(true); }
 }
