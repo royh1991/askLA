@@ -1,4 +1,4 @@
-import { GeoJsonLayer, BitmapLayer, PolygonLayer } from '@deck.gl/layers';
+import { GeoJsonLayer, IconLayer } from '@deck.gl/layers';
 
 const DISTRICT_COLORS: Record<number, [number, number, number]> = {
   1: [76, 175, 80], 2: [33, 150, 243], 3: [255, 152, 0], 4: [156, 39, 176],
@@ -134,57 +134,41 @@ export function createSimCityBuildingLayer(data: any) {
   });
 }
 
-// === SIMCITY LANDMARK SPRITE OVERLAYS ===
-// Each landmark is a Gemini-generated sprite rendered as a BitmapLayer
-// elevated slightly above the map, with a shadow polygon underneath.
+// === SIMCITY LANDMARK SPRITES ===
+// Billboard sprites that always face the camera — the isometric 3D look
+// is baked into the art itself. Large and always visible.
 
-interface LandmarkOverlay {
-  id: string;
+interface SimCityLandmark {
+  name: string;
+  position: [number, number]; // [lng, lat]
   image: string;
-  // Geographic bounds: [bottomLeft, topLeft, topRight, bottomRight] with z altitude
-  bounds: [[number, number, number], [number, number, number], [number, number, number], [number, number, number]];
+  pixelSize: number; // size in pixels on screen
 }
 
-const LANDMARK_OVERLAYS: LandmarkOverlay[] = [
-  {
-    id: 'lax',
-    image: '/sprites/landmarks/lax-simcity.png',
-    bounds: [
-      [-118.4195, 33.9305, 15],  // bottom-left (SW)
-      [-118.4195, 33.9505, 15],  // top-left (NW)
-      [-118.3895, 33.9505, 15],  // top-right (NE)
-      [-118.3895, 33.9305, 15],  // bottom-right (SE)
-    ],
-  },
-  // More landmarks will be added here as sprites are generated
+const SIMCITY_LANDMARKS: SimCityLandmark[] = [
+  { name: 'LAX', position: [-118.4085, 33.9416], image: '/sprites/landmarks/lax-simcity.png', pixelSize: 240 },
+  // More landmarks added here as generated
 ];
 
 export function createLandmarkOverlays(): any[] {
-  const layers: any[] = [];
-
-  for (const lm of LANDMARK_OVERLAYS) {
-    // Shadow polygon at ground level
-    const shadowBounds = lm.bounds.map(([lng, lat]) => [lng, lat]) as [number, number][];
-    layers.push(
-      new PolygonLayer({
-        id: `${lm.id}-shadow`,
-        data: [{ polygon: shadowBounds }],
-        getPolygon: (d: any) => d.polygon,
-        getFillColor: [0, 0, 0, 60],
-        extruded: false,
-      })
-    );
-
-    // Elevated sprite
-    layers.push(
-      new BitmapLayer({
-        id: `${lm.id}-sprite`,
-        image: lm.image,
-        bounds: lm.bounds,
-        opacity: 0.95,
-      })
-    );
-  }
-
-  return layers;
+  return [
+    new IconLayer({
+      id: 'simcity-landmarks',
+      data: SIMCITY_LANDMARKS,
+      pickable: true,
+      billboard: true, // Always face camera — preserves isometric 3D look
+      getIcon: (d: SimCityLandmark) => ({
+        url: d.image,
+        width: 991,
+        height: 873,
+        anchorY: 873, // Bottom of sprite sits at the position
+      }),
+      getPosition: (d: SimCityLandmark) => [...d.position, 50] as [number, number, number], // 50m altitude so it floats above map
+      getSize: (d: SimCityLandmark) => d.pixelSize,
+      sizeUnits: 'pixels' as const,
+      sizeMinPixels: 120, // Always visible even at overview zoom
+      sizeMaxPixels: 600,
+      alphaCutoff: 0.05, // Clean transparency edges
+    }),
+  ];
 }
