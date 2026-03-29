@@ -7,7 +7,7 @@ import type { MapRef } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import { MAP_STYLE } from './mapStyle';
-import { createDistrictLayer, createLandmarkLayer } from './layers';
+import { createDistrictLayer, createSimCityBuildingLayer } from './layers';
 import { DISTRICTS, type DistrictInfo } from './districtData';
 import districtsGeoJson from '../data/la-districts.json';
 
@@ -52,17 +52,39 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
     setHoveredDistrictId(districtId);
   }, []);
 
+  // Load SimCity building data
+  const [buildingData, setBuildingData] = useState<any>(null);
+  useEffect(() => {
+    // Load all building GeoJSON files and merge them
+    Promise.all([
+      fetch('/data/dtla_buildings.geojson').then(r => r.json()).catch(() => null),
+      fetch('/data/lax_buildings.geojson').then(r => r.json()).catch(() => null),
+      fetch('/data/dodger_stadium.geojson').then(r => r.json()).catch(() => null),
+    ]).then(([dtla, lax, dodger]) => {
+      const features: any[] = [];
+      if (dtla?.features) features.push(...dtla.features);
+      if (lax?.features) features.push(...lax.features);
+      if (dodger?.features) features.push(...dodger.features);
+      setBuildingData({ type: 'FeatureCollection', features });
+    });
+  }, []);
+
   // deck.gl layers
-  const layers = useMemo(() => [
-    createDistrictLayer(
-      districtsGeoJson,
-      selectedDistrictId,
-      hoveredDistrictId,
-      handleDistrictClick,
-      handleDistrictHover,
-    ),
-    createLandmarkLayer(),
-  ], [selectedDistrictId, hoveredDistrictId, handleDistrictClick, handleDistrictHover]);
+  const layers = useMemo(() => {
+    const l: any[] = [
+      createDistrictLayer(
+        districtsGeoJson,
+        selectedDistrictId,
+        hoveredDistrictId,
+        handleDistrictClick,
+        handleDistrictHover,
+      ),
+    ];
+    if (buildingData) {
+      l.push(createSimCityBuildingLayer(buildingData));
+    }
+    return l;
+  }, [selectedDistrictId, hoveredDistrictId, handleDistrictClick, handleDistrictHover, buildingData]);
 
   // Add 3D buildings after map loads
   const handleMapLoad = useCallback(() => {

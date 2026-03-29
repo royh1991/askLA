@@ -53,35 +53,83 @@ export function createDistrictLayer(
   });
 }
 
-// SimCity-style landmark sprites placed at real geographic coordinates
-interface LandmarkData {
-  name: string;
-  coordinates: [number, number]; // [lng, lat]
-  icon: string; // path to sprite image
-  size: number; // pixel size on screen
+// SimCity-style 3D building extrusions from real OSM footprints
+// Colors based on building type, heights exaggerated for SimCity feel
+const SIMCITY_COLORS: Record<string, [number, number, number]> = {
+  // Airport
+  terminal: [65, 105, 225],      // royal blue
+  hangar: [255, 140, 0],         // orange
+  // Stadium/sports
+  stadium: [50, 205, 50],        // green
+  grandstand: [50, 205, 50],
+  // Civic/public
+  government: [206, 147, 216],   // purple
+  public: [206, 147, 216],
+  civic: [206, 147, 216],
+  church: [206, 147, 216],
+  cathedral: [206, 147, 216],
+  // Commercial
+  commercial: [100, 181, 246],   // blue
+  retail: [100, 181, 246],
+  office: [100, 181, 246],
+  hotel: [255, 183, 77],         // amber
+  // Industrial
+  industrial: [255, 213, 79],    // yellow
+  warehouse: [255, 213, 79],
+  // Residential
+  residential: [129, 199, 132],  // green
+  apartments: [129, 199, 132],
+  house: [129, 199, 132],
+  // Tall buildings
+  tower: [171, 71, 188],         // purple
+  skyscraper: [171, 71, 188],
+  // Parking
+  parking: [158, 158, 158],      // gray
+  garage: [158, 158, 158],
+};
+
+function getSimCityColor(props: any): [number, number, number, number] {
+  const h = parseFloat(props.height) || 0;
+  const type = props.aeroway || props.building || props.leisure || 'yes';
+
+  // Check named color first
+  const named = SIMCITY_COLORS[type];
+  if (named) return [...named, 210];
+
+  // Fall back to height-based coloring (like SimCity)
+  if (h > 100) return [171, 71, 188, 220];    // Skyscrapers → purple
+  if (h > 50) return [255, 213, 79, 210];      // Tall office → yellow
+  if (h > 25) return [100, 181, 246, 210];      // Mid-rise → blue
+  if (h > 10) return [255, 183, 77, 200];       // Low-rise → amber
+  return [129, 199, 132, 200];                   // Small → green
 }
 
-const LANDMARKS: LandmarkData[] = [
-  { name: 'LAX', coordinates: [-118.4085, 33.9416], icon: '/sprites/landmarks/lax-simcity.png', size: 280 },
-  // More landmarks will be added here as they're generated
-];
-
-export function createLandmarkLayer() {
-  return new IconLayer({
-    id: 'simcity-landmarks',
-    data: LANDMARKS,
+export function createSimCityBuildingLayer(data: any) {
+  return new GeoJsonLayer({
+    id: 'simcity-buildings',
+    data,
+    extruded: true,
+    wireframe: true,
+    filled: true,
     pickable: true,
-    getIcon: (d: LandmarkData) => ({
-      url: d.icon,
-      width: 991,
-      height: 873,
-      anchorY: 873,
-    }),
-    getPosition: (d: LandmarkData) => d.coordinates,
-    getSize: (d: LandmarkData) => d.size,
-    sizeUnits: 'pixels' as const,
-    sizeMinPixels: 80,
-    sizeMaxPixels: 500,
-    billboard: false, // Render flat on the map surface, not facing camera
+    autoHighlight: true,
+    highlightColor: [255, 255, 100, 180],
+    getFillColor: (f: any) => getSimCityColor(f.properties),
+    getLineColor: [0, 0, 0, 60],
+    getElevation: (f: any) => {
+      const h = parseFloat(f.properties.height) || (parseFloat(f.properties['building:levels']) || 3) * 3.5;
+      return h * 2; // 2x exaggeration for SimCity feel
+    },
+    lineWidthMinPixels: 1,
+    material: {
+      ambient: 0.35,
+      diffuse: 0.65,
+      shininess: 32,
+      specularColor: [200, 200, 200],
+    },
+    onClick: (info: any) => {
+      const p = info.object?.properties;
+      if (p?.name) console.log('Building:', p.name, p.height ? p.height + 'm' : '');
+    },
   });
 }
