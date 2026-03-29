@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DISTRICTS as DISTRICTS_DATA } from './Game';
-import type { DistrictHotspot } from './Game';
+import type { DistrictData } from './Game';
 
 const DISTRICTS_INFO = DISTRICTS_DATA;
 function hexColor(n: number) { return '#' + n.toString(16).padStart(6, '0'); }
@@ -11,7 +11,7 @@ function hexColor(n: number) { return '#' + n.toString(16).padStart(6, '0'); }
 export default function SimCityApp() {
   const canvasRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<any>(null);
-  const [selectedDistrict, setSelectedDistrict] = useState<DistrictHotspot | null>(null);
+  const [selectedDistrict, setSelectedDistrict] = useState<DistrictData | null>(null);
   const [showDistricts, setShowDistricts] = useState(true);
   const [loading, setLoading] = useState(true);
 
@@ -44,7 +44,7 @@ export default function SimCityApp() {
     };
   }, []);
 
-  const handleDistrictClick = useCallback((d: DistrictHotspot) => {
+  const handleDistrictClick = useCallback((d: DistrictData) => {
     setSelectedDistrict(d);
     gameRef.current?.selectDistrict(d.id);
   }, []);

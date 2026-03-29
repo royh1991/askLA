@@ -100,7 +100,7 @@ async function gen(name, prompt) {
       if (!prompt) { console.log(`[err] Unknown terrain type: ${terrainType}`); continue; }
       const name = `t-${col}-${row}`;
       await gen(name, prompt);
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 5000));
     }
   }
   console.log('\n=== ALL TERRAIN TILES DONE ===');
