@@ -86,26 +86,25 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
     return l;
   }, [selectedDistrictId, hoveredDistrictId, handleDistrictClick, handleDistrictHover, buildingData]);
 
-  // Add 3D buildings after map loads
+  // Add 3D buildings and SimCity sprite overlays after map loads
   const handleMapLoad = useCallback(() => {
     setMapLoaded(true);
     const map = mapRef.current?.getMap();
     if (!map) return;
 
-    // Add 3D building extrusions (SimCity colored by height)
-    const layers = map.getStyle()?.layers;
-    if (!layers) return;
+    const styleLayers = map.getStyle()?.layers;
+    if (!styleLayers) return;
 
-    // Find the first label layer to insert buildings below it
+    // Find the first label layer to insert below
     let labelLayerId: string | undefined;
-    for (const layer of layers) {
+    for (const layer of styleLayers) {
       if (layer.type === 'symbol' && (layer as any).layout?.['text-field']) {
         labelLayerId = layer.id;
         break;
       }
     }
 
-    // Check if building source exists
+    // Add 3D building extrusions (SimCity colored by height)
     const sources = map.getStyle()?.sources;
     const hasBuildings = Object.values(sources || {}).some((s: any) =>
       s.type === 'vector' && (s.url?.includes('openmaptiles') || s.url?.includes('openfreemap'))
@@ -121,10 +120,10 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
         paint: {
           'fill-extrusion-color': [
             'interpolate', ['linear'], ['coalesce', ['get', 'render_height'], 10],
-            0, '#81C784',    // Short = residential green
-            15, '#64B5F6',   // Medium = commercial blue
-            40, '#FFD54F',   // Tall = office yellow
-            80, '#CE93D8',   // Skyscrapers = purple
+            0, '#81C784',
+            15, '#64B5F6',
+            40, '#FFD54F',
+            80, '#CE93D8',
           ],
           'fill-extrusion-height': ['coalesce', ['get', 'render_height'], 10],
           'fill-extrusion-base': ['coalesce', ['get', 'render_min_height'], 0],
@@ -132,6 +131,33 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
         },
       }, labelLayerId);
     }
+
+    // === SIMCITY SPRITE OVERLAYS ===
+    // These are Gemini-generated isometric sprites painted onto the map
+    // at exact geographic coordinates using MapLibre's image source.
+    // The sprites have transparent backgrounds so the map shows through.
+
+    // LAX Airport — SimCity isometric sprite
+    map.addSource('lax-simcity', {
+      type: 'image',
+      url: '/sprites/landmarks/lax-simcity.png',
+      coordinates: [
+        [-118.4195, 33.9505],  // top-left (NW)
+        [-118.3895, 33.9505],  // top-right (NE)
+        [-118.3895, 33.9305],  // bottom-right (SE)
+        [-118.4195, 33.9305],  // bottom-left (SW)
+      ],
+    });
+    map.addLayer({
+      id: 'lax-simcity-layer',
+      type: 'raster',
+      source: 'lax-simcity',
+      paint: {
+        'raster-opacity': 0.92,
+        'raster-fade-duration': 300,
+      },
+    }, labelLayerId);
+
   }, []);
 
   return (
