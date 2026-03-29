@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 const fs = require('fs');
 const sharp = require('sharp');
-const API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyAzShfSJqSVfU6te2MniRfUrm1fj13qgT8';
+const API_KEY = process.env.GEMINI_API_KEY;
+if (!API_KEY) { console.error('Set GEMINI_API_KEY env var'); process.exit(1); }
 const DIR = 'public/sprites/hoods';
 
 fs.mkdirSync(DIR, { recursive: true });
