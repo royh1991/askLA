@@ -7,7 +7,7 @@ import type { MapRef } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import { MAP_STYLE } from './mapStyle';
-import { createDistrictLayer, createSimCityBuildingLayer } from './layers';
+import { createDistrictLayer, createSimCityBuildingLayer, createLandmarkOverlays } from './layers';
 import { DISTRICTS, type DistrictInfo } from './districtData';
 import districtsGeoJson from '../data/la-districts.json';
 
@@ -83,6 +83,8 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
     if (buildingData) {
       l.push(createSimCityBuildingLayer(buildingData));
     }
+    // SimCity sprite overlays as elevated BitmapLayers with shadows
+    l.push(...createLandmarkOverlays());
     return l;
   }, [selectedDistrictId, hoveredDistrictId, handleDistrictClick, handleDistrictHover, buildingData]);
 
@@ -132,31 +134,9 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
       }, labelLayerId);
     }
 
-    // === SIMCITY SPRITE OVERLAYS ===
-    // These are Gemini-generated isometric sprites painted onto the map
-    // at exact geographic coordinates using MapLibre's image source.
-    // The sprites have transparent backgrounds so the map shows through.
-
-    // LAX Airport — SimCity isometric sprite
-    map.addSource('lax-simcity', {
-      type: 'image',
-      url: '/sprites/landmarks/lax-simcity.png',
-      coordinates: [
-        [-118.4195, 33.9505],  // top-left (NW)
-        [-118.3895, 33.9505],  // top-right (NE)
-        [-118.3895, 33.9305],  // bottom-right (SE)
-        [-118.4195, 33.9305],  // bottom-left (SW)
-      ],
-    });
-    map.addLayer({
-      id: 'lax-simcity-layer',
-      type: 'raster',
-      source: 'lax-simcity',
-      paint: {
-        'raster-opacity': 0.92,
-        'raster-fade-duration': 300,
-      },
-    }, labelLayerId);
+    // Hide default 3D buildings in areas where we have SimCity sprites
+    // We can't use 'within' for polygons, so we'll handle it via the
+    // deck.gl layer rendering order (our sprites render on top)
 
   }, []);
 

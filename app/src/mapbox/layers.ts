@@ -1,4 +1,4 @@
-import { GeoJsonLayer, IconLayer } from '@deck.gl/layers';
+import { GeoJsonLayer, BitmapLayer, PolygonLayer } from '@deck.gl/layers';
 
 const DISTRICT_COLORS: Record<number, [number, number, number]> = {
   1: [76, 175, 80], 2: [33, 150, 243], 3: [255, 152, 0], 4: [156, 39, 176],
@@ -132,4 +132,59 @@ export function createSimCityBuildingLayer(data: any) {
       if (p?.name) console.log('Building:', p.name, p.height ? p.height + 'm' : '');
     },
   });
+}
+
+// === SIMCITY LANDMARK SPRITE OVERLAYS ===
+// Each landmark is a Gemini-generated sprite rendered as a BitmapLayer
+// elevated slightly above the map, with a shadow polygon underneath.
+
+interface LandmarkOverlay {
+  id: string;
+  image: string;
+  // Geographic bounds: [bottomLeft, topLeft, topRight, bottomRight] with z altitude
+  bounds: [[number, number, number], [number, number, number], [number, number, number], [number, number, number]];
+}
+
+const LANDMARK_OVERLAYS: LandmarkOverlay[] = [
+  {
+    id: 'lax',
+    image: '/sprites/landmarks/lax-simcity.png',
+    bounds: [
+      [-118.4195, 33.9305, 15],  // bottom-left (SW)
+      [-118.4195, 33.9505, 15],  // top-left (NW)
+      [-118.3895, 33.9505, 15],  // top-right (NE)
+      [-118.3895, 33.9305, 15],  // bottom-right (SE)
+    ],
+  },
+  // More landmarks will be added here as sprites are generated
+];
+
+export function createLandmarkOverlays(): any[] {
+  const layers: any[] = [];
+
+  for (const lm of LANDMARK_OVERLAYS) {
+    // Shadow polygon at ground level
+    const shadowBounds = lm.bounds.map(([lng, lat]) => [lng, lat]) as [number, number][];
+    layers.push(
+      new PolygonLayer({
+        id: `${lm.id}-shadow`,
+        data: [{ polygon: shadowBounds }],
+        getPolygon: (d: any) => d.polygon,
+        getFillColor: [0, 0, 0, 60],
+        extruded: false,
+      })
+    );
+
+    // Elevated sprite
+    layers.push(
+      new BitmapLayer({
+        id: `${lm.id}-sprite`,
+        image: lm.image,
+        bounds: lm.bounds,
+        opacity: 0.95,
+      })
+    );
+  }
+
+  return layers;
 }
