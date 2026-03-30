@@ -2,6 +2,7 @@
 
 import { useMemo, useEffect, useState } from 'react';
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { coordsToVector3 } from 'react-three-map/maplibre';
 
 // Canvas origin — must match what's passed to <Canvas latitude={} longitude={}>
@@ -80,11 +81,17 @@ export default function SimCityBuildings() {
   const gradientMap = useMemo(() => createGradientMap(), []);
   const windowTex = useMemo(() => createWindowTexture(), []);
 
-  // Load building data
+  // Load building data from all areas
   useEffect(() => {
-    fetch('/data/dtla_buildings.geojson')
-      .then(r => r.json())
-      .then(data => {
+    Promise.all([
+      fetch('/data/dtla_buildings.geojson').then(r => r.json()).catch(() => ({ features: [] })),
+      fetch('/data/lax_buildings.geojson').then(r => r.json()).catch(() => ({ features: [] })),
+      fetch('/data/dodger_stadium.geojson').then(r => r.json()).catch(() => ({ features: [] })),
+      fetch('/data/hollywood_ktown_usc_buildings.geojson').then(r => r.json()).catch(() => ({ features: [] })),
+    ]).then(([dtla, lax, dodger, hku]) => {
+      const data = {
+        features: [...(dtla.features||[]), ...(lax.features||[]), ...(dodger.features||[]), ...(hku.features||[])],
+      };
         const blds: BuildingFeature[] = [];
         for (const f of data.features || []) {
           if (f.geometry?.type !== 'Polygon') continue;
@@ -94,68 +101,89 @@ export default function SimCityBuildings() {
             (parseFloat(f.properties?.['building:levels']) || 3) * 3.5;
           blds.push({ coords, height, name: f.properties?.name });
         }
-        // Start with top 200 tallest buildings for performance test
-        blds.sort((a, b) => b.height - a.height);
-        setBuildings(blds.slice(0, 200));
-        console.log(`Loaded ${blds.length} buildings, rendering top 200`);
-      })
-      .catch(e => console.warn('Building load error:', e));
+        setBuildings(blds);
+        console.log(`Loaded ${blds.length} buildings, rendering all`);
+      }).catch(e => console.warn('Building load error:', e));
   }, []);
 
-  // Convert each building polygon to a Three.js ExtrudeGeometry
-  const meshes = useMemo(() => {
+  // Group buildings by height tier and merge geometries for performance
+  const tiers = useMemo(() => {
     if (buildings.length === 0) return [];
 
-    return buildings.map((bld, i) => {
-      try {
-        // Convert polygon coords to local Three.js space
-        const localCoords = bld.coords.map(([lng, lat]) => {
-          const [x, _y, z] = geoToLocal(lat, lng);
-          return new THREE.Vector2(x, z); // x = east/west, z = north/south
-        });
+    const tierDefs = [
+      { name: 'houses', min: 0, max: 10, color: '#A67B5B' },
+      { name: 'lowrise', min: 10, max: 25, color: '#C4A882' },
+      { name: 'midrise', min: 25, max: 50, color: '#CD853F' },
+      { name: 'highrise', min: 50, max: 100, color: '#B8860B' },
+      { name: 'skyscraper', min: 100, max: Infinity, color: '#8B4513' },
+    ];
 
-        const shape = new THREE.Shape(localCoords);
-        const h = bld.height * 2.0; // SimCity height exaggeration
+    const result: { geo: THREE.BufferGeometry; edges: THREE.BufferGeometry; color: string; hasWindows: boolean }[] = [];
 
-        const geo = new THREE.ExtrudeGeometry(shape, {
-          depth: h,
-          bevelEnabled: false,
-        });
-        // Rotate so extrusion goes UP along Y axis
-        geo.rotateX(-Math.PI / 2);
+    for (const tier of tierDefs) {
+      const tierBlds = buildings.filter(b => b.height >= tier.min && b.height < tier.max);
+      if (tierBlds.length === 0) continue;
 
-        // Warm random color
-        const color = WARM_COLORS[i % WARM_COLORS.length];
+      const geos: THREE.BufferGeometry[] = [];
+      for (const bld of tierBlds) {
+        try {
+          const localCoords = bld.coords.map(([lng, lat]) => {
+            const [x, _y, z] = geoToLocal(lat, lng);
+            return new THREE.Vector2(x, z);
+          });
+          if (localCoords.length < 3) continue;
 
-        return { geo, color, height: bld.height, name: bld.name };
-      } catch {
-        return null;
+          const shape = new THREE.Shape(localCoords);
+          const h = bld.height * 3.0;
+          const geo = new THREE.ExtrudeGeometry(shape, { depth: h, bevelEnabled: false });
+          geo.rotateX(-Math.PI / 2);
+          geos.push(geo);
+        } catch { /* skip invalid */ }
       }
-    }).filter(Boolean) as { geo: THREE.ExtrudeGeometry; color: string; height: number; name?: string }[];
+
+      if (geos.length === 0) continue;
+
+      try {
+        const merged = mergeGeometries(geos, false);
+        if (merged) {
+          const edges = new THREE.EdgesGeometry(merged, 25);
+          result.push({ geo: merged, edges, color: tier.color, hasWindows: tier.min >= 10 });
+        }
+      } catch (e) {
+        // Fallback: just use the first geo
+        if (geos[0]) {
+          result.push({ geo: geos[0], edges: new THREE.EdgesGeometry(geos[0], 25), color: tier.color, hasWindows: tier.min >= 10 });
+        }
+      }
+
+      // Dispose individual geos
+      for (const g of geos) g.dispose();
+    }
+
+    return result;
   }, [buildings]);
 
-  if (meshes.length === 0) return null;
+  if (tiers.length === 0) return null;
 
   return (
     <group>
-      {/* Lighting */}
+      {/* Warm directional lighting like SimCity 3000 */}
       <directionalLight position={[300, 500, 200]} intensity={1.8} color="#FFF5E0" />
       <ambientLight intensity={0.5} color="#C8B8A8" />
       <hemisphereLight args={['#87CEEB', '#4A7A3A', 0.3]} />
 
-      {/* Buildings */}
-      {meshes.map((m, i) => (
+      {/* Merged tier meshes — one draw call per tier */}
+      {tiers.map((tier, i) => (
         <group key={i}>
-          <mesh geometry={m.geo}>
+          <mesh geometry={tier.geo}>
             <meshToonMaterial
-              color={m.color}
+              color={tier.color}
               gradientMap={gradientMap}
-              map={m.height > 15 ? windowTex : undefined}
+              map={tier.hasWindows ? windowTex : undefined}
             />
           </mesh>
-          {/* Black outlines */}
-          <lineSegments geometry={new THREE.EdgesGeometry(m.geo, 20)}>
-            <lineBasicMaterial color="#2A2A2A" transparent opacity={0.5} />
+          <lineSegments geometry={tier.edges}>
+            <lineBasicMaterial color="#1A1A1A" transparent opacity={0.4} />
           </lineSegments>
         </group>
       ))}
