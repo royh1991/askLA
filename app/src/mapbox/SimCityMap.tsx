@@ -74,8 +74,219 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
     if (!map) return;
 
 
+    // ═══════════════════════════════════════════════════════════
+    // ICONIC LA LANDMARKS — procedurally generated 3D shapes
+    // ═══════════════════════════════════════════════════════════
+    const landmarkFeatures: any[] = [];
+
+    // Helper: create a rectangle polygon at lat/lng with dimensions in meters
+    function rectAt(lng: number, lat: number, widthM: number, heightM: number): number[][] {
+      const dLng = widthM / (111320 * Math.cos(lat * Math.PI / 180));
+      const dLat = heightM / 111320;
+      return [
+        [lng - dLng/2, lat - dLat/2],
+        [lng + dLng/2, lat - dLat/2],
+        [lng + dLng/2, lat + dLat/2],
+        [lng - dLng/2, lat + dLat/2],
+        [lng - dLng/2, lat - dLat/2],
+      ];
+    }
+
+    // Helper: create a circle polygon (for domes, towers)
+    function circleAt(lng: number, lat: number, radiusM: number, sides = 16): number[][] {
+      const coords: number[][] = [];
+      for (let i = 0; i <= sides; i++) {
+        const angle = (i / sides) * Math.PI * 2;
+        const dLng = (radiusM * Math.cos(angle)) / (111320 * Math.cos(lat * Math.PI / 180));
+        const dLat = (radiusM * Math.sin(angle)) / 111320;
+        coords.push([lng + dLng, lat + dLat]);
+      }
+      return coords;
+    }
+
+    // ── HOLLYWOOD SIGN ──
+    // 9 letters on the south slope of Mount Lee, ~14m tall each
+    const signBaseLng = -118.3267;
+    const signBaseLat = 34.1341;
+    const letterW = 0.000085;  // ~9m in longitude
+    const letterGap = 0.000015; // ~1.5m gap
+    const letterStep = letterW + letterGap;
+    'HOLLYWOOD'.split('').forEach((letter, i) => {
+      const lng = signBaseLng + i * letterStep;
+      landmarkFeatures.push({
+        type: 'Feature',
+        geometry: { type: 'Polygon', coordinates: [rectAt(lng, signBaseLat, 9, 2.5)] },
+        properties: { height: 14, name: letter, type: 'hollywood-sign', color: '#FFFFFF' },
+      });
+    });
+
+    // ── GRIFFITH OBSERVATORY ──
+    // Iconic domed building on the south slope of Mount Hollywood
+    // Main dome
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [circleAt(-118.3004, 34.1185, 15)] },
+      properties: { height: 25, name: 'Griffith Observatory', type: 'landmark', color: '#F0E8D0' },
+    });
+    // Side domes
+    [-1, 1].forEach(side => {
+      landmarkFeatures.push({
+        type: 'Feature',
+        geometry: { type: 'Polygon', coordinates: [circleAt(-118.3004 + side * 0.0003, 34.1185, 8)] },
+        properties: { height: 18, name: '', type: 'landmark', color: '#E0D8C0' },
+      });
+    });
+
+    // ── CAPITOL RECORDS BUILDING ──
+    // Cylindrical tower in Hollywood
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [circleAt(-118.3265, 34.1003, 12)] },
+      properties: { height: 45, name: 'Capitol Records', type: 'landmark', color: '#E8E0D0' },
+    });
+    // Spire on top
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [circleAt(-118.3265, 34.1003, 3)] },
+      properties: { height: 58, name: '', type: 'spire', color: '#C0C0C0' },
+    });
+
+    // ── LA CITY HALL ──
+    // Iconic stepped tower in downtown
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [rectAt(-118.2428, 34.0537, 30, 20)] },
+      properties: { height: 138, name: 'City Hall', type: 'landmark', color: '#F0E8D0' },
+    });
+    // Tower portion
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [rectAt(-118.2428, 34.0537, 15, 10)] },
+      properties: { height: 150, name: '', type: 'spire', color: '#F8F0E0' },
+    });
+
+    // ── WALT DISNEY CONCERT HALL ──
+    // Curvy metallic building
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [rectAt(-118.2500, 34.0553, 55, 40)] },
+      properties: { height: 22, name: 'Disney Hall', type: 'landmark', color: '#D0D0D8' },
+    });
+
+    // ── DODGER STADIUM ──
+    // Already in prominent buildings but add color accent
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [circleAt(-118.2400, 34.0739, 120)] },
+      properties: { height: 8, name: 'Dodger Stadium', type: 'stadium', color: '#2060A8' },
+    });
+
+    // ── LAX THEME BUILDING ──
+    // Space-age structure
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [circleAt(-118.4020, 33.9535, 20)] },
+      properties: { height: 32, name: 'LAX Theme Building', type: 'landmark', color: '#F0F0F0' },
+    });
+    // Support legs
+    [0, 120, 240].forEach(angle => {
+      const rad = angle * Math.PI / 180;
+      const dx = 0.00012 * Math.cos(rad);
+      const dy = 0.00008 * Math.sin(rad);
+      landmarkFeatures.push({
+        type: 'Feature',
+        geometry: { type: 'Polygon', coordinates: [circleAt(-118.4020 + dx, 33.9535 + dy, 4)] },
+        properties: { height: 22, name: '', type: 'landmark', color: '#E0E0E0' },
+      });
+    });
+
+    // ── THE BROAD ──
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [rectAt(-118.2503, 34.0544, 40, 25)] },
+      properties: { height: 18, name: 'The Broad', type: 'landmark', color: '#F8F8F0' },
+    });
+
+    // ── WATTS TOWERS ──
+    // Tall thin spires
+    [0, 6, 12, -4, -9].forEach((offsetM, i) => {
+      const heights = [30, 28, 25, 22, 18];
+      landmarkFeatures.push({
+        type: 'Feature',
+        geometry: { type: 'Polygon', coordinates: [circleAt(-118.2413 + offsetM / 111320, 33.9389, 2)] },
+        properties: { height: heights[i], name: i === 0 ? 'Watts Towers' : '', type: 'spire', color: '#C8A858' },
+      });
+    });
+
+    // Add all landmarks as a GeoJSON source
+    map.addSource('landmarks', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: landmarkFeatures },
+    });
+
+    // Hollywood Sign — white letters on the hillside
+    map.addLayer({
+      id: 'hollywood-sign',
+      source: 'landmarks',
+      type: 'fill-extrusion',
+      filter: ['==', 'type', 'hollywood-sign'],
+      paint: {
+        'fill-extrusion-color': '#FFFFFF',
+        'fill-extrusion-height': ['*', ['get', 'height'], 6.0],
+        'fill-extrusion-base': 0,
+        'fill-extrusion-opacity': 0.95,
+      },
+    });
+
+    // Landmark buildings — custom colored extrusions
+    map.addLayer({
+      id: 'landmark-buildings',
+      source: 'landmarks',
+      type: 'fill-extrusion',
+      filter: ['in', 'type', 'landmark', 'stadium'],
+      paint: {
+        'fill-extrusion-color': ['get', 'color'],
+        'fill-extrusion-height': ['*', ['get', 'height'], 6.0],
+        'fill-extrusion-base': 0,
+        'fill-extrusion-opacity': 0.95,
+      },
+    });
+
+    // Spires and towers — thin vertical accents
+    map.addLayer({
+      id: 'landmark-spires',
+      source: 'landmarks',
+      type: 'fill-extrusion',
+      filter: ['==', 'type', 'spire'],
+      paint: {
+        'fill-extrusion-color': ['get', 'color'],
+        'fill-extrusion-height': ['*', ['get', 'height'], 6.0],
+        'fill-extrusion-base': 0,
+        'fill-extrusion-opacity': 0.90,
+      },
+    });
+
+    // Landmark labels
+    map.addLayer({
+      id: 'landmark-labels',
+      source: 'landmarks',
+      type: 'symbol',
+      filter: ['all', ['has', 'name'], ['!=', 'name', ''], ['!=', 'type', 'hollywood-sign']],
+      layout: {
+        'text-field': ['get', 'name'],
+        'text-font': ['Open Sans Semibold'],
+        'text-size': 11,
+        'text-offset': [0, -2],
+        'text-anchor': 'bottom',
+      },
+      paint: {
+        'text-color': '#FFFFF0',
+        'text-halo-color': '#1A2A1A',
+        'text-halo-width': 2,
+      },
+    });
+
     // City-wide SimCity buildings via MapLibre fill-extrusion
-    // This covers ALL of LA — not just the Overpass-fetched clusters
     const sources = map.getStyle()?.sources;
     const hasBuildings = Object.values(sources || {}).some((s: any) =>
       s.type === 'vector' && (s.url?.includes('openmaptiles') || s.url?.includes('openfreemap'))
