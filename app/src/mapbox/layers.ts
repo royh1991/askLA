@@ -23,19 +23,19 @@ export function createDistrictLayer(
     getFillColor: (d: any) => {
       const id = d.properties?.district;
       const rgb = DISTRICT_COLORS[id] || [128, 128, 128];
-      const alpha = id === selectedId ? 100 : id === hoveredId ? 60 : 30;
+      const alpha = id === selectedId ? 140 : id === hoveredId ? 110 : 25;
       return [...rgb, alpha] as [number, number, number, number];
     },
     getLineColor: (d: any) => {
       const id = d.properties?.district;
-      if (id === selectedId) return [255, 255, 255, 220];
-      if (id === hoveredId) return [255, 255, 255, 150];
+      if (id === selectedId) return [255, 255, 255, 255];
+      if (id === hoveredId) return [255, 255, 255, 220];
       const rgb = DISTRICT_COLORS[id] || [128, 128, 128];
-      return [...rgb, 120] as [number, number, number, number];
+      return [...rgb, 100] as [number, number, number, number];
     },
     getLineWidth: (d: any) => {
       const id = d.properties?.district;
-      return id === selectedId ? 80 : id === hoveredId ? 50 : 20;
+      return id === selectedId ? 120 : id === hoveredId ? 90 : 20;
     },
     lineWidthUnits: 'meters' as const,
     onClick: (info: any) => {
