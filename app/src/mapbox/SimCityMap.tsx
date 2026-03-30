@@ -64,7 +64,51 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
   ], [selectedDistrictId, hoveredDistrictId, handleDistrictClick, handleDistrictHover]);
 
   const handleMapLoad = useCallback(() => {
-    // No fill-extrusion — Three.js handles all buildings
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+
+    // City-wide SimCity buildings via MapLibre fill-extrusion
+    // This covers ALL of LA — not just the Overpass-fetched clusters
+    const sources = map.getStyle()?.sources;
+    const hasBuildings = Object.values(sources || {}).some((s: any) =>
+      s.type === 'vector' && (s.url?.includes('openmaptiles') || s.url?.includes('openfreemap'))
+    );
+
+    if (hasBuildings) {
+      // Find label layer to insert below
+      let labelLayerId: string | undefined;
+      for (const layer of map.getStyle()?.layers || []) {
+        if (layer.type === 'symbol') { labelLayerId = layer.id; break; }
+      }
+
+      map.addLayer({
+        id: 'buildings-3d',
+        source: 'openmaptiles',
+        'source-layer': 'building',
+        type: 'fill-extrusion',
+        minzoom: 1,
+        paint: {
+          'fill-extrusion-color': [
+            'interpolate', ['linear'], ['coalesce', ['get', 'render_height'], 8],
+            0, '#C4B998',    // warm tan (small)
+            12, '#D4C4A8',   // cream (low-rise)
+            25, '#B89878',   // brown (mid-rise)
+            50, '#A07050',   // brick (high-rise)
+            80, '#8B6F4E',   // dark brown (tall)
+            120, '#7A5C3E',  // chocolate (skyscraper)
+            200, '#6B4E3A',  // dark chocolate (supertall)
+          ],
+          'fill-extrusion-height': [
+            '*', ['coalesce', ['get', 'render_height'], 8], 3.0 // 3x height exaggeration
+          ],
+          'fill-extrusion-base': [
+            '*', ['coalesce', ['get', 'render_min_height'], 0], 3.0
+          ],
+          'fill-extrusion-opacity': 0.9,
+          'fill-extrusion-vertical-gradient': false, // flat SimCity shading
+        },
+      }, labelLayerId);
+    }
   }, []);
 
   return (
@@ -98,11 +142,14 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
           <DeckGLOverlay layers={layers} />
           <NavigationControl position="top-left" showCompass={false} />
 
+          {/* Three.js buildings disabled — fill-extrusion covers all of LA
+              Re-enable for enhanced detail on landmarks later
           {threeReady && ThreeCanvas && SimCityBuildings && (
             <ThreeCanvas latitude={CENTER_LAT} longitude={CENTER_LNG} altitude={0}>
               <SimCityBuildings />
             </ThreeCanvas>
           )}
+          */}
         </Map>
       </div>
     </div>
