@@ -43,7 +43,7 @@ export const MAP_STYLE: any = {
       source: 'openmaptiles',
       'source-layer': 'landuse',
       filter: ['==', 'class', 'residential'],
-      paint: { 'fill-color': '#4D8040' },
+      paint: { 'fill-color': '#508842' },
     },
     // Commercial/industrial — muted green-gray
     {
@@ -52,7 +52,7 @@ export const MAP_STYLE: any = {
       source: 'openmaptiles',
       'source-layer': 'landuse',
       filter: ['in', 'class', 'commercial', 'industrial', 'retail'],
-      paint: { 'fill-color': '#506848' },
+      paint: { 'fill-color': '#4A6A3C' },
     },
     // Minor roads — thin dark gray
     {
@@ -63,7 +63,7 @@ export const MAP_STYLE: any = {
       filter: ['all', ['in', 'class', 'minor', 'service', 'track', 'path']],
       paint: {
         'line-color': '#3A3A3A',
-        'line-width': ['interpolate', ['linear'], ['zoom'], 10, 0.5, 14, 2, 18, 4],
+        'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1, 14, 3, 18, 6],
       },
     },
     // Secondary roads — medium dark gray
@@ -75,7 +75,7 @@ export const MAP_STYLE: any = {
       filter: ['in', 'class', 'secondary', 'tertiary'],
       paint: {
         'line-color': '#383838',
-        'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1, 14, 4, 18, 8],
+        'line-width': ['interpolate', ['linear'], ['zoom'], 10, 2, 14, 5, 18, 10],
       },
     },
     // Primary roads — thick dark gray with casing

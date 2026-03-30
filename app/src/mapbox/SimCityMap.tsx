@@ -67,6 +67,7 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
     const map = mapRef.current?.getMap();
     if (!map) return;
 
+
     // City-wide SimCity buildings via MapLibre fill-extrusion
     // This covers ALL of LA — not just the Overpass-fetched clusters
     const sources = map.getStyle()?.sources;
