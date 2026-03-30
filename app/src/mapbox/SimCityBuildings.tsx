@@ -110,18 +110,38 @@ export default function SimCityBuildings() {
   const tiers = useMemo(() => {
     if (buildings.length === 0) return [];
 
+    // SimCity 3000 color palette — mix of warm browns, cream, gray, brick
+    // Split each tier into 2-3 color variants for variety
     const tierDefs = [
-      { name: 'houses', min: 0, max: 10, color: '#A67B5B' },
-      { name: 'lowrise', min: 10, max: 25, color: '#C4A882' },
-      { name: 'midrise', min: 25, max: 50, color: '#CD853F' },
-      { name: 'highrise', min: 50, max: 100, color: '#B8860B' },
-      { name: 'skyscraper', min: 100, max: Infinity, color: '#8B4513' },
+      { name: 'houses-1', min: 0, max: 10, color: '#A8907A' },   // warm gray
+      { name: 'houses-2', min: 0, max: 10, color: '#C4B090' },   // cream
+      { name: 'houses-3', min: 0, max: 10, color: '#B8A088' },   // tan
+      { name: 'lowrise-1', min: 10, max: 25, color: '#D4C4A8' }, // light cream
+      { name: 'lowrise-2', min: 10, max: 25, color: '#C8A882' }, // warm tan
+      { name: 'lowrise-3', min: 10, max: 25, color: '#E8D8C0' }, // off-white
+      { name: 'midrise-1', min: 25, max: 50, color: '#B89878' }, // brown
+      { name: 'midrise-2', min: 25, max: 50, color: '#A08880' }, // mauve gray
+      { name: 'midrise-3', min: 25, max: 50, color: '#C0A878' }, // golden
+      { name: 'highrise-1', min: 50, max: 100, color: '#8B6F4E' }, // dark brown
+      { name: 'highrise-2', min: 50, max: 100, color: '#9C8060' }, // sienna
+      { name: 'highrise-3', min: 50, max: 100, color: '#A07050' }, // brick
+      { name: 'skyscraper-1', min: 100, max: Infinity, color: '#7A5C3E' }, // dark brick
+      { name: 'skyscraper-2', min: 100, max: Infinity, color: '#6B4E3A' }, // chocolate
+      { name: 'skyscraper-3', min: 100, max: Infinity, color: '#8B7355' }, // bronze
     ];
 
     const result: { geo: THREE.BufferGeometry; edges: THREE.BufferGeometry; color: string; hasWindows: boolean }[] = [];
 
     for (const tier of tierDefs) {
-      const tierBlds = buildings.filter(b => b.height >= tier.min && b.height < tier.max);
+      // For multi-variant tiers, distribute buildings by hash
+      const variantIndex = parseInt(tier.name.split('-')[1] || '1') - 1;
+      const variantCount = tierDefs.filter(t => t.min === tier.min && t.max === tier.max).length;
+      const tierBlds = buildings.filter((b, idx) => {
+        const inRange = b.height >= tier.min && b.height < tier.max;
+        if (!inRange) return false;
+        // Distribute evenly across variants using index mod
+        return (idx % variantCount) === variantIndex;
+      });
       if (tierBlds.length === 0) continue;
 
       const geos: THREE.BufferGeometry[] = [];
