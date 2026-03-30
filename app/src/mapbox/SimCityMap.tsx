@@ -52,13 +52,15 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
       fetch('/data/dtla_buildings.geojson').then(r => r.json()).catch(() => ({ features: [] })),
       fetch('/data/lax_buildings.geojson').then(r => r.json()).catch(() => ({ features: [] })),
       fetch('/data/dodger_stadium.geojson').then(r => r.json()).catch(() => ({ features: [] })),
-    ]).then(([dtla, lax, dodger]) => {
+      fetch('/data/hollywood_ktown_usc_buildings.geojson').then(r => r.json()).catch(() => ({ features: [] })),
+    ]).then(([dtla, lax, dodger, hku]) => {
       const merged = {
         type: 'FeatureCollection',
         features: [
           ...(dtla.features || []),
           ...(lax.features || []),
           ...(dodger.features || []),
+          ...(hku.features || []),
         ],
       };
       const processed = processGeoJsonBuildings(merged, CENTER_LAT, CENTER_LNG);
