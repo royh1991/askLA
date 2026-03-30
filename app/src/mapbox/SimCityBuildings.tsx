@@ -99,6 +99,8 @@ export default function SimCityBuildings() {
           if (!coords || coords.length < 3) continue;
           const height = parseFloat(f.properties?.height) ||
             (parseFloat(f.properties?.['building:levels']) || 3) * 3.5;
+          // Only render buildings tall enough to be visible — skip tiny houses
+          if (height < 8) continue;
           blds.push({ coords, height, name: f.properties?.name });
         }
         setBuildings(blds);
@@ -110,15 +112,11 @@ export default function SimCityBuildings() {
   const tiers = useMemo(() => {
     if (buildings.length === 0) return [];
 
-    // SimCity 3000 color palette — mix of warm browns, cream, gray, brick
-    // Split each tier into 2-3 color variants for variety
+    // SimCity 3000 color palette — warm browns, cream, brick
     const tierDefs = [
-      { name: 'houses-1', min: 0, max: 10, color: '#A8907A' },   // warm gray
-      { name: 'houses-2', min: 0, max: 10, color: '#C4B090' },   // cream
-      { name: 'houses-3', min: 0, max: 10, color: '#B8A088' },   // tan
-      { name: 'lowrise-1', min: 10, max: 25, color: '#D4C4A8' }, // light cream
-      { name: 'lowrise-2', min: 10, max: 25, color: '#C8A882' }, // warm tan
-      { name: 'lowrise-3', min: 10, max: 25, color: '#E8D8C0' }, // off-white
+      { name: 'lowrise-1', min: 8, max: 25, color: '#D4C4A8' },  // light cream
+      { name: 'lowrise-2', min: 8, max: 25, color: '#C8A882' },  // warm tan
+      { name: 'lowrise-3', min: 8, max: 25, color: '#E0D0B8' },  // off-white
       { name: 'midrise-1', min: 25, max: 50, color: '#B89878' }, // brown
       { name: 'midrise-2', min: 25, max: 50, color: '#A08880' }, // mauve gray
       { name: 'midrise-3', min: 25, max: 50, color: '#C0A878' }, // golden
