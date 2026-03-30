@@ -10,11 +10,6 @@ import { MAP_STYLE } from './mapStyle';
 import { createDistrictLayer } from './layers';
 import { DISTRICTS, type DistrictInfo } from './districtData';
 import districtsGeoJson from '../data/la-districts.json';
-import { processGeoJsonBuildings, type ProcessedBuilding } from './buildingData';
-
-// Lazy import react-three-map and BuildingRenderer (they need window/document)
-let Canvas: any = null;
-let BuildingRenderer: any = null;
 
 function DeckGLOverlay(props: any) {
   const overlay = useControl(() => new MapboxOverlay(props));
@@ -27,118 +22,117 @@ interface SimCityMapProps {
   onDistrictSelect: (district: DistrictInfo | null) => void;
 }
 
-// Downtown LA center for coordinate conversion
-const CENTER_LAT = 34.0522;
-const CENTER_LNG = -118.2437;
-
 export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: SimCityMapProps) {
   const mapRef = useRef<MapRef>(null);
   const [hoveredDistrictId, setHoveredDistrictId] = useState<number | null>(null);
-  const [mapLoaded, setMapLoaded] = useState(false);
-  const [buildings, setBuildings] = useState<ProcessedBuilding[]>([]);
-  const [threeReady, setThreeReady] = useState(false);
 
-  // Load Three.js components dynamically (SSR-safe)
-  useEffect(() => {
-    Promise.all([
-      import('react-three-map/maplibre').then(m => { Canvas = m.Canvas; }),
-      import('./BuildingRenderer').then(m => { BuildingRenderer = m.default; }),
-    ]).then(() => setThreeReady(true)).catch(e => console.warn('Three.js load failed:', e));
-  }, []);
-
-  // Load building data
-  useEffect(() => {
-    Promise.all([
-      fetch('/data/dtla_buildings.geojson').then(r => r.json()).catch(() => ({ features: [] })),
-      fetch('/data/lax_buildings.geojson').then(r => r.json()).catch(() => ({ features: [] })),
-      fetch('/data/dodger_stadium.geojson').then(r => r.json()).catch(() => ({ features: [] })),
-      fetch('/data/hollywood_ktown_usc_buildings.geojson').then(r => r.json()).catch(() => ({ features: [] })),
-    ]).then(([dtla, lax, dodger, hku]) => {
-      const merged = {
-        type: 'FeatureCollection',
-        features: [
-          ...(dtla.features || []),
-          ...(lax.features || []),
-          ...(dodger.features || []),
-          ...(hku.features || []),
-        ],
-      };
-      const processed = processGeoJsonBuildings(merged, CENTER_LAT, CENTER_LNG);
-      setBuildings(processed);
-      console.log(`Loaded ${processed.length} buildings, ${processed.filter(b => b.isLandmark).length} landmarks`);
-    });
-  }, []);
-
-  // Fly to selected district
   useEffect(() => {
     if (!mapRef.current || !selectedDistrictId) return;
     const dist = DISTRICTS.find(d => d.id === selectedDistrictId);
     if (dist) {
-      mapRef.current.flyTo({
-        center: dist.center,
-        zoom: 14,
-        pitch: 55,
-        bearing: -17,
-        duration: 1500,
-      });
+      mapRef.current.flyTo({ center: dist.center, zoom: 14, pitch: 55, bearing: -17, duration: 1500 });
     }
   }, [selectedDistrictId]);
 
   const handleDistrictClick = useCallback((districtId: number) => {
-    const dist = DISTRICTS.find(d => d.id === districtId);
-    onDistrictSelect(dist || null);
+    onDistrictSelect(DISTRICTS.find(d => d.id === districtId) || null);
   }, [onDistrictSelect]);
 
   const handleDistrictHover = useCallback((districtId: number | null) => {
     setHoveredDistrictId(districtId);
   }, []);
 
-  // deck.gl layers (districts only — buildings handled by Three.js)
   const layers = useMemo(() => [
-    createDistrictLayer(
-      districtsGeoJson,
-      selectedDistrictId,
-      hoveredDistrictId,
-      handleDistrictClick,
-      handleDistrictHover,
-    ),
+    createDistrictLayer(districtsGeoJson, selectedDistrictId, hoveredDistrictId, handleDistrictClick, handleDistrictHover),
   ], [selectedDistrictId, hoveredDistrictId, handleDistrictClick, handleDistrictHover]);
 
-  // Disable MapLibre native fill-extrusion since Three.js handles buildings
   const handleMapLoad = useCallback(() => {
-    setMapLoaded(true);
-    // Do NOT add the fill-extrusion layer — Three.js renders all buildings
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+
+    const styleLayers = map.getStyle()?.layers;
+    if (!styleLayers) return;
+
+    let labelLayerId: string | undefined;
+    for (const layer of styleLayers) {
+      if (layer.type === 'symbol' && (layer as any).layout?.['text-field']) {
+        labelLayerId = layer.id;
+        break;
+      }
+    }
+
+    // SimCity-style 3D buildings — bright flat colors, no vertical gradient
+    const sources = map.getStyle()?.sources;
+    const hasBuildings = Object.values(sources || {}).some((s: any) =>
+      s.type === 'vector' && (s.url?.includes('openmaptiles') || s.url?.includes('openfreemap'))
+    );
+
+    if (hasBuildings) {
+      map.addLayer({
+        id: 'buildings-3d',
+        source: 'openmaptiles',
+        'source-layer': 'building',
+        type: 'fill-extrusion',
+        minzoom: 1,
+        paint: {
+          // SimCity color ramp: green houses → blue commercial → yellow office → purple skyscrapers
+          'fill-extrusion-color': [
+            'interpolate', ['linear'], ['coalesce', ['get', 'render_height'], 8],
+            0, '#6ABF69',     // bright green (houses)
+            12, '#C4B998',    // warm tan (low-rise)
+            25, '#5DADE2',    // bright blue (mid-rise)
+            50, '#F4D03F',    // bright yellow (office)
+            80, '#E74C3C',    // red (tall)
+            120, '#8E44AD',   // purple (skyscrapers)
+            200, '#F0F0F0',   // white (supertall)
+          ],
+          'fill-extrusion-height': [
+            '*', ['coalesce', ['get', 'render_height'], 8], 2.0 // 2x height exaggeration
+          ],
+          'fill-extrusion-base': [
+            '*', ['coalesce', ['get', 'render_min_height'], 0], 2.0
+          ],
+          'fill-extrusion-opacity': 0.92,
+          'fill-extrusion-vertical-gradient': false, // flat shading = SimCity look
+        },
+      }, labelLayerId);
+    }
   }, []);
 
   return (
-    <Map
-      ref={mapRef}
-      initialViewState={{
-        longitude: CENTER_LNG,
-        latitude: CENTER_LAT,
-        zoom: 14,
-        pitch: 55,
-        bearing: -17,
-      }}
-      maxPitch={65}
-      minPitch={20}
-      maxZoom={18}
-      minZoom={9}
-      mapStyle={MAP_STYLE}
-      onLoad={handleMapLoad}
-      style={{ width: '100%', height: '100%' }}
-      cursor={hoveredDistrictId ? 'pointer' : 'grab'}
-      attributionControl={false}
-    >
-      <DeckGLOverlay layers={layers} />
-      <NavigationControl position="top-left" showCompass={false} />
+    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+      {/* SimCity post-processing: pixelation + saturation */}
+      <style>{`
+        .simcity-map {
+          filter: saturate(1.5) contrast(1.2) brightness(1.05);
+        }
+      `}</style>
 
-      {/* Three.js SimCity buildings rendered via react-three-map */}
-      {threeReady && Canvas && BuildingRenderer && buildings.length > 0 && (
-        <Canvas latitude={CENTER_LAT} longitude={CENTER_LNG} altitude={0}>
-          <BuildingRenderer buildings={buildings} />
-        </Canvas>
-      )}
-    </Map>
+      <div className="simcity-map" style={{ width: '100%', height: '100%' }}>
+        <Map
+          ref={mapRef}
+          initialViewState={{
+            longitude: -118.2437,
+            latitude: 34.0522,
+            zoom: 14,
+            pitch: 55,
+            bearing: -17,
+          }}
+          maxPitch={65}
+          minPitch={20}
+          maxZoom={18}
+          minZoom={9}
+          mapStyle={MAP_STYLE}
+          onLoad={handleMapLoad}
+          style={{ width: '100%', height: '100%' }}
+          cursor={hoveredDistrictId ? 'pointer' : 'grab'}
+          attributionControl={false}
+          // pixelRatio kept at default for readable text
+        >
+          <DeckGLOverlay layers={layers} />
+          <NavigationControl position="top-left" showCompass={false} />
+        </Map>
+      </div>
+    </div>
   );
 }
