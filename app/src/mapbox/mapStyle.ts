@@ -11,7 +11,13 @@ export const MAP_STYLE: any = {
       url: 'https://tiles.openfreemap.org/planet',
     },
   },
-  glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
+  glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+  light: {
+    anchor: 'viewport',
+    color: '#FFF8E8',
+    intensity: 0.6,
+    position: [1.5, 210, 30], // radial distance, azimuth, polar angle
+  },
   layers: [
     // Background — dark green like SimCity grass
     {
@@ -170,7 +176,7 @@ export const MAP_STYLE: any = {
       filter: ['in', 'class', 'city', 'town', 'suburb', 'neighbourhood'],
       layout: {
         'text-field': '{name}',
-        'text-font': ['Open Sans Bold'],
+        'text-font': ['Open Sans Semibold'],
         'text-size': ['interpolate', ['linear'], ['zoom'], 10, 10, 14, 13, 18, 16],
         'text-max-width': 8,
       },
@@ -190,7 +196,7 @@ export const MAP_STYLE: any = {
       minzoom: 14,
       layout: {
         'text-field': '{name}',
-        'text-font': ['Open Sans Regular'],
+        'text-font': ['Open Sans Semibold'],
         'text-size': 9,
         'symbol-placement': 'line',
         'text-max-angle': 30,
