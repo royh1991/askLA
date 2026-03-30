@@ -81,6 +81,9 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
         if (layer.type === 'symbol') { labelLayerId = layer.id; break; }
       }
 
+      // SimCity varied color palette — pseudo-random per building using $id
+      // This creates the colorful variety seen in SimCity: blue glass, cream,
+      // brick red, teal, yellow buildings mixed together on every block
       map.addLayer({
         id: 'buildings-3d',
         source: 'openmaptiles',
@@ -89,23 +92,53 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
         minzoom: 1,
         paint: {
           'fill-extrusion-color': [
-            'interpolate', ['linear'], ['coalesce', ['get', 'render_height'], 8],
-            0, '#C4B998',    // warm tan (small)
-            12, '#D4C4A8',   // cream (low-rise)
-            25, '#B89878',   // brown (mid-rise)
-            50, '#A07050',   // brick (high-rise)
-            80, '#8B6F4E',   // dark brown (tall)
-            120, '#7A5C3E',  // chocolate (skyscraper)
-            200, '#6B4E3A',  // dark chocolate (supertall)
+            'match',
+            ['%', ['to-number', ['id'], 0], 12],
+            0, '#6B8EAD',   // steel blue glass
+            1, '#E8D8C0',   // cream/ivory
+            2, '#B05A3C',   // brick red
+            3, '#7AACB0',   // teal
+            4, '#D4C090',   // warm sand
+            5, '#8898A8',   // cool gray
+            6, '#C8A060',   // golden tan
+            7, '#9EB89E',   // sage green
+            8, '#B89070',   // sienna
+            9, '#6890B0',   // slate blue
+            10, '#D0B880',  // wheat
+            11, '#A87858',  // copper brown
+            '#C4B998'       // default warm tan
           ],
           'fill-extrusion-height': [
-            '*', ['coalesce', ['get', 'render_height'], 8], 3.0 // 3x height exaggeration
+            '*', ['coalesce', ['get', 'render_height'], 8], 2.5
           ],
           'fill-extrusion-base': [
-            '*', ['coalesce', ['get', 'render_min_height'], 0], 3.0
+            '*', ['coalesce', ['get', 'render_min_height'], 0], 2.5
           ],
-          'fill-extrusion-opacity': 0.9,
-          'fill-extrusion-vertical-gradient': false, // flat SimCity shading
+          'fill-extrusion-opacity': 0.92,
+          'fill-extrusion-vertical-gradient': false,
+        },
+      }, labelLayerId);
+
+      // Add a second darker layer for just the rooftops to create
+      // that SimCity look where roofs are slightly different shade
+      map.addLayer({
+        id: 'buildings-roof-tint',
+        source: 'openmaptiles',
+        'source-layer': 'building',
+        type: 'fill-extrusion',
+        minzoom: 14,
+        paint: {
+          'fill-extrusion-color': '#000000',
+          'fill-extrusion-height': [
+            '+',
+            ['*', ['coalesce', ['get', 'render_height'], 8], 2.5],
+            0.5 // tiny layer on top
+          ],
+          'fill-extrusion-base': [
+            '*', ['coalesce', ['get', 'render_height'], 8], 2.5
+          ],
+          'fill-extrusion-opacity': 0.15, // subtle dark tint on roofs
+          'fill-extrusion-vertical-gradient': false,
         },
       }, labelLayerId);
     }
@@ -115,7 +148,7 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <style>{`
         .simcity-map {
-          filter: saturate(1.4) contrast(1.15);
+          filter: saturate(1.6) contrast(1.2) brightness(1.05);
         }
       `}</style>
 

@@ -17,7 +17,7 @@ export const MAP_STYLE: any = {
     {
       id: 'background',
       type: 'background',
-      paint: { 'background-color': '#4A7A3A' },
+      paint: { 'background-color': '#5A8A42' }, // brighter SimCity green
     },
     // Water — deep blue
     {
@@ -34,7 +34,7 @@ export const MAP_STYLE: any = {
       source: 'openmaptiles',
       'source-layer': 'landuse',
       filter: ['in', 'class', 'park', 'cemetery', 'grass'],
-      paint: { 'fill-color': '#5A9A4A' },
+      paint: { 'fill-color': '#68A850' }, // brighter park green
     },
     // Residential areas — slightly lighter green
     {
