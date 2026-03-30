@@ -48,18 +48,6 @@ export const MAP_STYLE: any = {
       type: 'background',
       paint: { 'background-color': '#70C050' }, // VIVID SimCity grass
     },
-    // Hillshade — green-tinted terrain relief for SimCity hills
-    {
-      id: 'hillshade',
-      type: 'hillshade',
-      source: 'hillshade-dem',
-      paint: {
-        'hillshade-shadow-color': '#1A3020',    // very dark green shadows
-        'hillshade-highlight-color': '#C8E878',  // bright yellow-green sunlit slopes
-        'hillshade-accent-color': '#385828',     // olive-brown ridges
-        'hillshade-exaggeration': 0.9,           // strong contrast
-      },
-    },
     // Water — rich saturated blue
     {
       id: 'water',
@@ -149,6 +137,21 @@ export const MAP_STYLE: any = {
       'source-layer': 'landuse',
       filter: ['in', 'class', 'school', 'university', 'hospital'],
       paint: { 'fill-color': '#408868', 'fill-opacity': 0.7 },
+    },
+    // ═══════════════════════════════════════
+    // HILLSHADE — on top of ALL fills so terrain shading
+    // shows through residential, parks, everywhere
+    // ═══════════════════════════════════════
+    {
+      id: 'hillshade',
+      type: 'hillshade',
+      source: 'hillshade-dem',
+      paint: {
+        'hillshade-shadow-color': '#1A3020',
+        'hillshade-highlight-color': '#C8E878',
+        'hillshade-accent-color': '#385828',
+        'hillshade-exaggeration': 0.9,
+      },
     },
     // ═══════════════════════════════════════
     // ROADS — thick dark grid, cartoon sidewalks
