@@ -54,10 +54,10 @@ export const MAP_STYLE: any = {
       type: 'hillshade',
       source: 'hillshade-dem',
       paint: {
-        'hillshade-shadow-color': '#1A4838',    // deep forest shadow
-        'hillshade-highlight-color': '#78C868',  // warm lime highlights
-        'hillshade-accent-color': '#2A6848',     // cool teal-green ridges
-        'hillshade-exaggeration': 0.7,
+        'hillshade-shadow-color': '#1A3020',    // very dark green shadows
+        'hillshade-highlight-color': '#C8E878',  // bright yellow-green sunlit slopes
+        'hillshade-accent-color': '#385828',     // olive-brown ridges
+        'hillshade-exaggeration': 0.9,           // strong contrast
       },
     },
     // Water — rich saturated blue
@@ -82,7 +82,7 @@ export const MAP_STYLE: any = {
       source: 'openmaptiles',
       'source-layer': 'landcover',
       filter: ['==', 'class', 'wood'],
-      paint: { 'fill-color': '#308828', 'fill-opacity': 0.85 },
+      paint: { 'fill-color': '#2A6820', 'fill-opacity': 0.9 },
     },
     // Grass landcover
     {

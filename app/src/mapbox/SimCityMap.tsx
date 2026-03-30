@@ -218,6 +218,203 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
       });
     });
 
+    // ── SOFI STADIUM ── (Inglewood)
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [circleAt(-118.3392, 33.9534, 160)] },
+      properties: { height: 25, name: 'SoFi Stadium', type: 'stadium', color: '#3868A8' },
+    });
+
+    // ── CRYPTO.COM ARENA ── (downtown)
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [rectAt(-118.2673, 34.0430, 80, 65)] },
+      properties: { height: 30, name: 'Crypto.com Arena', type: 'stadium', color: '#282838' },
+    });
+
+    // ── LA CONVENTION CENTER ──
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [rectAt(-118.2694, 34.0404, 120, 80)] },
+      properties: { height: 18, name: 'Convention Center', type: 'landmark', color: '#A0A8B8' },
+    });
+
+    // ── UNION STATION ──
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [rectAt(-118.2365, 34.0561, 65, 35)] },
+      properties: { height: 22, name: 'Union Station', type: 'landmark', color: '#E8D0A0' },
+    });
+    // Clock tower
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [rectAt(-118.2365, 34.0561, 8, 8)] },
+      properties: { height: 38, name: '', type: 'spire', color: '#F0E0C0' },
+    });
+
+    // ── TCL CHINESE THEATRE ──
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [rectAt(-118.3418, 34.1022, 30, 25)] },
+      properties: { height: 20, name: 'Chinese Theatre', type: 'landmark', color: '#C83020' },
+    });
+    // Pagoda top
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [rectAt(-118.3418, 34.1022, 15, 12)] },
+      properties: { height: 28, name: '', type: 'spire', color: '#D04030' },
+    });
+
+    // ── HOLLYWOOD BOWL ──
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [circleAt(-118.3393, 34.1122, 60)] },
+      properties: { height: 12, name: 'Hollywood Bowl', type: 'stadium', color: '#E0D8C0' },
+    });
+    // Band shell arc
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [circleAt(-118.3393, 34.1127, 25)] },
+      properties: { height: 20, name: '', type: 'landmark', color: '#F0E8D8' },
+    });
+
+    // ── GETTY CENTER ── (Brentwood hills)
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [rectAt(-118.4745, 34.0780, 70, 50)] },
+      properties: { height: 22, name: 'Getty Center', type: 'landmark', color: '#F0ECE0' },
+    });
+
+    // ── SANTA MONICA PIER ──
+    // Ferris wheel
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [circleAt(-118.4983, 34.0087, 15)] },
+      properties: { height: 40, name: 'Santa Monica Pier', type: 'landmark', color: '#E84040' },
+    });
+    // Pier structure
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [rectAt(-118.4975, 34.0090, 80, 15)] },
+      properties: { height: 6, name: '', type: 'landmark', color: '#B89068' },
+    });
+
+    // ── USC ── Tommy Trojan area
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [rectAt(-118.2852, 34.0206, 45, 30)] },
+      properties: { height: 25, name: 'USC', type: 'landmark', color: '#901020' },
+    });
+
+    // ── UCLA ── Royce Hall
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [rectAt(-118.4422, 34.0730, 50, 25)] },
+      properties: { height: 22, name: 'UCLA', type: 'landmark', color: '#2868A0' },
+    });
+
+    // ── ROSE BOWL ── (Pasadena)
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [circleAt(-118.1678, 34.1613, 120)] },
+      properties: { height: 18, name: 'Rose Bowl', type: 'stadium', color: '#488848' },
+    });
+
+    // ── LA MEMORIAL COLISEUM ──
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [circleAt(-118.2878, 34.0141, 100)] },
+      properties: { height: 22, name: 'LA Coliseum', type: 'stadium', color: '#C8A848' },
+    });
+    // Peristyle tower
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [rectAt(-118.2878, 34.0120, 10, 10)] },
+      properties: { height: 40, name: '', type: 'spire', color: '#E0D0A8' },
+    });
+
+    // ── THE FORUM ── (Inglewood)
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [circleAt(-118.3418, 33.9583, 80)] },
+      properties: { height: 20, name: 'The Forum', type: 'stadium', color: '#D8C888' },
+    });
+
+    // ── BRADBURY BUILDING ── (downtown)
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [rectAt(-118.2476, 34.0505, 25, 20)] },
+      properties: { height: 16, name: 'Bradbury Bldg', type: 'landmark', color: '#C88850' },
+    });
+
+    // ── ANGELS FLIGHT ── (downtown funicular)
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [rectAt(-118.2510, 34.0513, 5, 15)] },
+      properties: { height: 10, name: 'Angels Flight', type: 'landmark', color: '#E85020' },
+    });
+
+    // ── CATHEDRAL OF OUR LADY ── (downtown)
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [rectAt(-118.2460, 34.0579, 40, 25)] },
+      properties: { height: 28, name: 'Cathedral', type: 'landmark', color: '#E8D8B8' },
+    });
+    // Bell tower
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [rectAt(-118.2455, 34.0585, 6, 6)] },
+      properties: { height: 46, name: '', type: 'spire', color: '#F0E8D0' },
+    });
+
+    // ── BEVERLY CENTER ──
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [rectAt(-118.3618, 34.0754, 70, 55)] },
+      properties: { height: 25, name: 'Beverly Center', type: 'landmark', color: '#D0C8C0' },
+    });
+
+    // ── THE GROVE ──
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [rectAt(-118.3578, 34.0720, 55, 40)] },
+      properties: { height: 15, name: 'The Grove', type: 'landmark', color: '#D8C8A0' },
+    });
+
+    // ── GRIFFITH PARK ── tall tree marker
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [circleAt(-118.3005, 34.1367, 8)] },
+      properties: { height: 15, name: 'Griffith Park', type: 'landmark', color: '#308828' },
+    });
+
+    // ── ECHO PARK LAKE ── fountain marker
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [circleAt(-118.2607, 34.0730, 6)] },
+      properties: { height: 12, name: 'Echo Park', type: 'landmark', color: '#4090C0' },
+    });
+
+    // ── GRAND CENTRAL MARKET ──
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [rectAt(-118.2491, 34.0509, 30, 18)] },
+      properties: { height: 14, name: 'Grand Central Mkt', type: 'landmark', color: '#D04030' },
+    });
+
+    // ── PERSHING SQUARE ──
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [rectAt(-118.2526, 34.0488, 45, 45)] },
+      properties: { height: 3, name: 'Pershing Square', type: 'landmark', color: '#58C048' },
+    });
+    // Purple tower sculpture
+    landmarkFeatures.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [circleAt(-118.2526, 34.0488, 3)] },
+      properties: { height: 28, name: '', type: 'spire', color: '#9048C0' },
+    });
+
     // Add all landmarks as a GeoJSON source
     map.addSource('landmarks', {
       type: 'geojson',
