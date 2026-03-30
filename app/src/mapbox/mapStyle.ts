@@ -9,58 +9,115 @@ export const MAP_STYLE: any = {
     openmaptiles: {
       type: 'vector',
       url: 'https://tiles.openfreemap.org/planet',
+      bounds: [-118.8, 33.6, -117.9, 34.4], // LA metro only — skip tiles outside
     },
   },
   glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
   light: {
     anchor: 'viewport',
-    color: '#FFFFFF',
-    intensity: 0.8,
-    position: [1.5, 210, 45],
+    color: '#FFFCF4',   // neutral-warm sunlight (not too yellow)
+    intensity: 0.9,     // strong but not harsh shadows
+    position: [1.5, 210, 35],  // moderate sun angle
   },
   layers: [
     // Background — dark green like SimCity grass
     {
       id: 'background',
       type: 'background',
-      paint: { 'background-color': '#5A8A42' }, // brighter SimCity green
+      paint: { 'background-color': '#68B050' }, // bright vivid SimCity grass
     },
-    // Water — deep blue
+    // Water — deep SimCity blue
     {
       id: 'water',
       type: 'fill',
       source: 'openmaptiles',
       'source-layer': 'water',
-      paint: { 'fill-color': '#2A5A8A' },
+      paint: { 'fill-color': '#2858A0' },
     },
-    // Land use — parks are brighter green
+    // Water shore highlight
+    {
+      id: 'water-outline',
+      type: 'line',
+      source: 'openmaptiles',
+      'source-layer': 'water',
+      paint: {
+        'line-color': '#1A4080',
+        'line-width': 1.5,
+      },
+    },
+    // Natural landcover — forests/woods darker green
+    {
+      id: 'landcover-wood',
+      type: 'fill',
+      source: 'openmaptiles',
+      'source-layer': 'landcover',
+      filter: ['==', 'class', 'wood'],
+      paint: { 'fill-color': '#3A7A30', 'fill-opacity': 0.8 },
+    },
+    // Natural landcover — grass
+    {
+      id: 'landcover-grass',
+      type: 'fill',
+      source: 'openmaptiles',
+      'source-layer': 'landcover',
+      filter: ['==', 'class', 'grass'],
+      paint: { 'fill-color': '#5A9A42', 'fill-opacity': 0.7 },
+    },
+    // Parks — bright SimCity green (distinct from terrain)
     {
       id: 'landuse-park',
       type: 'fill',
       source: 'openmaptiles',
       'source-layer': 'landuse',
       filter: ['in', 'class', 'park', 'cemetery', 'grass'],
-      paint: { 'fill-color': '#68A850' }, // brighter park green
+      paint: { 'fill-color': '#58B848' },
     },
-    // Residential areas — slightly lighter green
+    // Park outlines for definition
+    {
+      id: 'landuse-park-outline',
+      type: 'line',
+      source: 'openmaptiles',
+      'source-layer': 'landuse',
+      filter: ['in', 'class', 'park', 'cemetery', 'grass'],
+      paint: { 'line-color': '#3A8A28', 'line-width': 1 },
+    },
+    // Residential zones — SimCity green residential tint
     {
       id: 'landuse-residential',
       type: 'fill',
       source: 'openmaptiles',
       'source-layer': 'landuse',
       filter: ['==', 'class', 'residential'],
-      paint: { 'fill-color': '#508842' },
+      paint: { 'fill-color': '#4C8840' },
     },
-    // Commercial/industrial — muted green-gray
+    // Commercial zones — subtle blue-green (SimCity commercial zone hint)
     {
       id: 'landuse-commercial',
       type: 'fill',
       source: 'openmaptiles',
       'source-layer': 'landuse',
-      filter: ['in', 'class', 'commercial', 'industrial', 'retail'],
-      paint: { 'fill-color': '#4A6A3C' },
+      filter: ['in', 'class', 'commercial', 'retail'],
+      paint: { 'fill-color': '#3A6A52' },
     },
-    // Minor roads — thin dark gray
+    // Industrial zones — yellow-green (SimCity industrial zone hint)
+    {
+      id: 'landuse-industrial',
+      type: 'fill',
+      source: 'openmaptiles',
+      'source-layer': 'landuse',
+      filter: ['==', 'class', 'industrial'],
+      paint: { 'fill-color': '#5A7A38' },
+    },
+    // Hospital/school — distinct areas
+    {
+      id: 'landuse-education',
+      type: 'fill',
+      source: 'openmaptiles',
+      'source-layer': 'landuse',
+      filter: ['in', 'class', 'school', 'university'],
+      paint: { 'fill-color': '#4A7850', 'fill-opacity': 0.6 },
+    },
+    // Minor roads — thin dark gray grid
     {
       id: 'road-minor',
       type: 'line',
@@ -70,6 +127,18 @@ export const MAP_STYLE: any = {
       paint: {
         'line-color': '#3A3A3A',
         'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1, 14, 3, 18, 6],
+      },
+    },
+    // Secondary road sidewalks — light gray casing for SimCity sidewalk effect
+    {
+      id: 'road-secondary-sidewalk',
+      type: 'line',
+      source: 'openmaptiles',
+      'source-layer': 'transportation',
+      filter: ['in', 'class', 'secondary', 'tertiary'],
+      paint: {
+        'line-color': '#6A6A60',
+        'line-width': ['interpolate', ['linear'], ['zoom'], 10, 3, 14, 7, 18, 14],
       },
     },
     // Secondary roads — medium dark gray
@@ -84,7 +153,19 @@ export const MAP_STYLE: any = {
         'line-width': ['interpolate', ['linear'], ['zoom'], 10, 2, 14, 5, 18, 10],
       },
     },
-    // Primary roads — thick dark gray with casing
+    // Primary road sidewalks — lighter casing
+    {
+      id: 'road-primary-sidewalk',
+      type: 'line',
+      source: 'openmaptiles',
+      'source-layer': 'transportation',
+      filter: ['==', 'class', 'primary'],
+      paint: {
+        'line-color': '#707068',
+        'line-width': ['interpolate', ['linear'], ['zoom'], 10, 4, 14, 10, 18, 18],
+      },
+    },
+    // Primary roads — dark casing
     {
       id: 'road-primary-casing',
       type: 'line',
@@ -107,7 +188,19 @@ export const MAP_STYLE: any = {
         'line-width': ['interpolate', ['linear'], ['zoom'], 10, 2, 14, 6, 18, 10],
       },
     },
-    // Highways/motorways — thick with yellow center line feel
+    // Highway sidewalk/shoulder
+    {
+      id: 'road-highway-shoulder',
+      type: 'line',
+      source: 'openmaptiles',
+      'source-layer': 'transportation',
+      filter: ['in', 'class', 'motorway', 'trunk'],
+      paint: {
+        'line-color': '#606058',
+        'line-width': ['interpolate', ['linear'], ['zoom'], 8, 3, 12, 8, 16, 20],
+      },
+    },
+    // Highways/motorways — thick with yellow center line
     {
       id: 'road-highway-casing',
       type: 'line',
@@ -130,7 +223,7 @@ export const MAP_STYLE: any = {
         'line-width': ['interpolate', ['linear'], ['zoom'], 8, 1.5, 12, 4, 16, 12],
       },
     },
-    // Highway center line — yellow like SimCity
+    // Highway center line — yellow dashes like SimCity
     {
       id: 'road-highway-center',
       type: 'line',
