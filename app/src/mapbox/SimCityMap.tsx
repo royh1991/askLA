@@ -7,11 +7,15 @@ import type { MapRef } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import { MAP_STYLE } from './mapStyle';
-import { createDistrictLayer, createSimCityBuildingLayer, createLandmarkOverlays } from './layers';
+import { createDistrictLayer } from './layers';
 import { DISTRICTS, type DistrictInfo } from './districtData';
 import districtsGeoJson from '../data/la-districts.json';
+import { processGeoJsonBuildings, type ProcessedBuilding } from './buildingData';
 
-// deck.gl MapboxOverlay as a react-map-gl control
+// Lazy import react-three-map and BuildingRenderer (they need window/document)
+let Canvas: any = null;
+let BuildingRenderer: any = null;
+
 function DeckGLOverlay(props: any) {
   const overlay = useControl(() => new MapboxOverlay(props));
   overlay.setProps(props);
@@ -23,10 +27,45 @@ interface SimCityMapProps {
   onDistrictSelect: (district: DistrictInfo | null) => void;
 }
 
+// Downtown LA center for coordinate conversion
+const CENTER_LAT = 34.0522;
+const CENTER_LNG = -118.2437;
+
 export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: SimCityMapProps) {
   const mapRef = useRef<MapRef>(null);
   const [hoveredDistrictId, setHoveredDistrictId] = useState<number | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [buildings, setBuildings] = useState<ProcessedBuilding[]>([]);
+  const [threeReady, setThreeReady] = useState(false);
+
+  // Load Three.js components dynamically (SSR-safe)
+  useEffect(() => {
+    Promise.all([
+      import('react-three-map/maplibre').then(m => { Canvas = m.Canvas; }),
+      import('./BuildingRenderer').then(m => { BuildingRenderer = m.default; }),
+    ]).then(() => setThreeReady(true)).catch(e => console.warn('Three.js load failed:', e));
+  }, []);
+
+  // Load building data
+  useEffect(() => {
+    Promise.all([
+      fetch('/data/dtla_buildings.geojson').then(r => r.json()).catch(() => ({ features: [] })),
+      fetch('/data/lax_buildings.geojson').then(r => r.json()).catch(() => ({ features: [] })),
+      fetch('/data/dodger_stadium.geojson').then(r => r.json()).catch(() => ({ features: [] })),
+    ]).then(([dtla, lax, dodger]) => {
+      const merged = {
+        type: 'FeatureCollection',
+        features: [
+          ...(dtla.features || []),
+          ...(lax.features || []),
+          ...(dodger.features || []),
+        ],
+      };
+      const processed = processGeoJsonBuildings(merged, CENTER_LAT, CENTER_LNG);
+      setBuildings(processed);
+      console.log(`Loaded ${processed.length} buildings, ${processed.filter(b => b.isLandmark).length} landmarks`);
+    });
+  }, []);
 
   // Fly to selected district
   useEffect(() => {
@@ -35,7 +74,7 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
     if (dist) {
       mapRef.current.flyTo({
         center: dist.center,
-        zoom: 13.5,
+        zoom: 14,
         pitch: 55,
         bearing: -17,
         duration: 1500,
@@ -52,101 +91,30 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
     setHoveredDistrictId(districtId);
   }, []);
 
-  // Load SimCity building data
-  const [buildingData, setBuildingData] = useState<any>(null);
-  useEffect(() => {
-    // Load all building GeoJSON files and merge them
-    Promise.all([
-      fetch('/data/dtla_buildings.geojson').then(r => r.json()).catch(() => null),
-      fetch('/data/lax_buildings.geojson').then(r => r.json()).catch(() => null),
-      fetch('/data/dodger_stadium.geojson').then(r => r.json()).catch(() => null),
-    ]).then(([dtla, lax, dodger]) => {
-      const features: any[] = [];
-      if (dtla?.features) features.push(...dtla.features);
-      if (lax?.features) features.push(...lax.features);
-      if (dodger?.features) features.push(...dodger.features);
-      setBuildingData({ type: 'FeatureCollection', features });
-    });
-  }, []);
+  // deck.gl layers (districts only — buildings handled by Three.js)
+  const layers = useMemo(() => [
+    createDistrictLayer(
+      districtsGeoJson,
+      selectedDistrictId,
+      hoveredDistrictId,
+      handleDistrictClick,
+      handleDistrictHover,
+    ),
+  ], [selectedDistrictId, hoveredDistrictId, handleDistrictClick, handleDistrictHover]);
 
-  // deck.gl layers
-  const layers = useMemo(() => {
-    const l: any[] = [
-      createDistrictLayer(
-        districtsGeoJson,
-        selectedDistrictId,
-        hoveredDistrictId,
-        handleDistrictClick,
-        handleDistrictHover,
-      ),
-    ];
-    if (buildingData) {
-      l.push(createSimCityBuildingLayer(buildingData));
-    }
-    // SimCity sprite overlays as elevated BitmapLayers with shadows
-    l.push(...createLandmarkOverlays());
-    return l;
-  }, [selectedDistrictId, hoveredDistrictId, handleDistrictClick, handleDistrictHover, buildingData]);
-
-  // Add 3D buildings and SimCity sprite overlays after map loads
+  // Disable MapLibre native fill-extrusion since Three.js handles buildings
   const handleMapLoad = useCallback(() => {
     setMapLoaded(true);
-    const map = mapRef.current?.getMap();
-    if (!map) return;
-
-    const styleLayers = map.getStyle()?.layers;
-    if (!styleLayers) return;
-
-    // Find the first label layer to insert below
-    let labelLayerId: string | undefined;
-    for (const layer of styleLayers) {
-      if (layer.type === 'symbol' && (layer as any).layout?.['text-field']) {
-        labelLayerId = layer.id;
-        break;
-      }
-    }
-
-    // Add 3D building extrusions (SimCity colored by height)
-    const sources = map.getStyle()?.sources;
-    const hasBuildings = Object.values(sources || {}).some((s: any) =>
-      s.type === 'vector' && (s.url?.includes('openmaptiles') || s.url?.includes('openfreemap'))
-    );
-
-    if (hasBuildings) {
-      map.addLayer({
-        id: 'buildings-3d',
-        source: 'openmaptiles',
-        'source-layer': 'building',
-        type: 'fill-extrusion',
-        minzoom: 13,
-        paint: {
-          'fill-extrusion-color': [
-            'interpolate', ['linear'], ['coalesce', ['get', 'render_height'], 10],
-            0, '#81C784',
-            15, '#64B5F6',
-            40, '#FFD54F',
-            80, '#CE93D8',
-          ],
-          'fill-extrusion-height': ['coalesce', ['get', 'render_height'], 10],
-          'fill-extrusion-base': ['coalesce', ['get', 'render_min_height'], 0],
-          'fill-extrusion-opacity': 0.82,
-        },
-      }, labelLayerId);
-    }
-
-    // Hide default 3D buildings in areas where we have SimCity sprites
-    // We can't use 'within' for polygons, so we'll handle it via the
-    // deck.gl layer rendering order (our sprites render on top)
-
+    // Do NOT add the fill-extrusion layer — Three.js renders all buildings
   }, []);
 
   return (
     <Map
       ref={mapRef}
       initialViewState={{
-        longitude: -118.2437,
-        latitude: 34.0522,
-        zoom: 11,
+        longitude: CENTER_LNG,
+        latitude: CENTER_LAT,
+        zoom: 14,
         pitch: 55,
         bearing: -17,
       }}
@@ -162,6 +130,13 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
     >
       <DeckGLOverlay layers={layers} />
       <NavigationControl position="top-left" showCompass={false} />
+
+      {/* Three.js SimCity buildings rendered via react-three-map */}
+      {threeReady && Canvas && BuildingRenderer && buildings.length > 0 && (
+        <Canvas latitude={CENTER_LAT} longitude={CENTER_LNG} altitude={0}>
+          <BuildingRenderer buildings={buildings} />
+        </Canvas>
+      )}
     </Map>
   );
 }
