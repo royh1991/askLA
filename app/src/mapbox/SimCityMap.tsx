@@ -116,7 +116,7 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
                 0, '#F0E0C0', 1, '#D0A868', 2, '#E0C8A0', '#C08858'
               ]
             ],
-            'fill-extrusion-height': ['*', ['get', 'height'], 3.0],
+            'fill-extrusion-height': ['*', ['get', 'height'], 3.5],
             'fill-extrusion-base': 0,
             'fill-extrusion-opacity': [
               'interpolate', ['linear'], ['zoom'],
@@ -132,7 +132,7 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
           type: 'symbol',
           minzoom: 11,
           maxzoom: 14,
-          filter: ['all', ['has', 'name'], ['!=', 'name', ''], ['>', 'height', 80]],
+          filter: ['all', ['has', 'name'], ['!=', 'name', ''], ['>', 'prominence', 100]],
           layout: {
             'text-field': ['get', 'name'],
             'text-font': ['Open Sans Semibold'],
@@ -170,8 +170,8 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
         },
       }, labelLayerId);
 
-      // ALL buildings — bold solid colors, height-dependent SimCity palette
-      // No repeating texture patterns (they trigger trypophobia)
+      // ALL buildings — VIVID SimCity palette, way more colorful than reality
+      // This is a video game aesthetic, not an architecture rendering
       map.addLayer({
         id: 'buildings-3d',
         source: 'openmaptiles',
@@ -181,59 +181,67 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
         paint: {
           'fill-extrusion-color': [
             'case',
-            // Skyscrapers (>60m) → bold glass/steel blues
+            // Skyscrapers (>60m) → BOLD glass towers — vivid blues and teals
             ['>', ['coalesce', ['get', 'render_height'], 8], 60],
-            ['match', ['%', ['to-number', ['id'], 0], 6],
-              0, '#5890C0',   // bright blue glass
-              1, '#70B0E0',   // sky blue glass
-              2, '#4880B0',   // medium blue
-              3, '#60A8D0',   // light blue
-              4, '#8098B0',   // steel
-              '#5890C0'
+            ['match', ['%', ['to-number', ['id'], 0], 8],
+              0, '#3088D0',   // electric blue
+              1, '#50C0E0',   // cyan glass
+              2, '#2070B0',   // deep blue
+              3, '#40B8D8',   // bright teal
+              4, '#6090C0',   // steel blue
+              5, '#20A0C8',   // aqua
+              6, '#5078B0',   // navy blue
+              '#3088D0'
             ],
-            // Highrise (30-60m) → vivid commercial mix
+            // Highrise (30-60m) → punchy commercial variety
             ['>', ['coalesce', ['get', 'render_height'], 8], 30],
-            ['match', ['%', ['to-number', ['id'], 0], 8],
-              0, '#F0E8D0',   // bright white
-              1, '#D0A050',   // bold golden
-              2, '#C06838',   // terracotta
-              3, '#58A8B8',   // teal
-              4, '#E8D8C0',   // cream
-              5, '#90A0B0',   // steel gray
-              6, '#B06040',   // dark brick
-              '#E0D0B8'
+            ['match', ['%', ['to-number', ['id'], 0], 10],
+              0, '#F8F0D0',   // bright white/cream
+              1, '#E0A030',   // bold gold
+              2, '#D05830',   // vivid terracotta
+              3, '#38B0C0',   // strong teal
+              4, '#F0D8A0',   // sunny yellow
+              5, '#C86040',   // rust orange
+              6, '#80C0D0',   // light cyan
+              7, '#E8C078',   // amber
+              8, '#A0B8C8',   // cool steel
+              '#E8D0A0'
             ],
-            // Midrise (15-30m) → warm commercial
+            // Midrise (15-30m) → warm with pops of color
             ['>', ['coalesce', ['get', 'render_height'], 8], 15],
-            ['match', ['%', ['to-number', ['id'], 0], 8],
-              0, '#F0E0C0',   // warm cream
-              1, '#D0A868',   // golden
-              2, '#E0C8A0',   // warm beige
-              3, '#C08858',   // brown
-              4, '#E8D0B0',   // sandstone
-              5, '#B8C8D0',   // cool gray
-              6, '#D8B088',   // caramel
-              '#E0D0B8'
+            ['match', ['%', ['to-number', ['id'], 0], 10],
+              0, '#F8E8C0',   // bright cream
+              1, '#E8B050',   // bold golden
+              2, '#F0C880',   // warm amber
+              3, '#C08040',   // rich brown
+              4, '#E8D0A0',   // sandstone
+              5, '#B0D0D8',   // powder blue
+              6, '#D8A060',   // caramel
+              7, '#F0D8B0',   // light gold
+              8, '#C8B090',   // taupe
+              '#E8D0B0'
             ],
-            // Lowrise (<15m) → colorful residential SimCity palette
-            ['match', ['%', ['to-number', ['id'], 0], 12],
-              0, '#F0E8D0',   // bright cream
-              1, '#E8C090',   // warm orange
-              2, '#F8F0E0',   // white
-              3, '#C0D8B8',   // sage green
-              4, '#E8B8A0',   // salmon/pink
-              5, '#B8D0E0',   // sky blue
-              6, '#F0E0C0',   // golden
-              7, '#D0A878',   // brown
-              8, '#E0E8E0',   // pale mint
-              9, '#D8C098',   // sandstone
-              10, '#D0B8C0',  // mauve
-              '#E0D8C0'       // default warm
+            // Lowrise (<15m) → candy-colored residential like SimCity zones
+            ['match', ['%', ['to-number', ['id'], 0], 14],
+              0, '#F8F0D0',   // bright cream
+              1, '#F0B870',   // bold orange
+              2, '#FFFFF0',   // pure white
+              3, '#A0D898',   // minty green
+              4, '#F0A890',   // coral/salmon
+              5, '#90C8E8',   // sky blue
+              6, '#F8E098',   // sunny yellow
+              7, '#D8A070',   // warm brown
+              8, '#C8E8C8',   // light green
+              9, '#E8C888',   // golden
+              10, '#D8B0C8',  // lavender/mauve
+              11, '#A8D0D8',  // aqua mint
+              12, '#F0D0A0',  // peach
+              '#F0E0C0'       // warm cream
             ]
           ],
-          'fill-extrusion-height': ['*', ['coalesce', ['get', 'render_height'], 8], 3.0],
-          'fill-extrusion-base': ['*', ['coalesce', ['get', 'render_min_height'], 0], 3.0],
-          'fill-extrusion-opacity': 0.92,
+          'fill-extrusion-height': ['*', ['coalesce', ['get', 'render_height'], 8], 3.5],
+          'fill-extrusion-base': ['*', ['coalesce', ['get', 'render_min_height'], 0], 3.5],
+          'fill-extrusion-opacity': 0.95,
           'fill-extrusion-vertical-gradient': true,
         },
       }, labelLayerId);
@@ -250,7 +258,7 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
           'fill-extrusion-color': '#000000',
           'fill-extrusion-height': ['*', ['coalesce', ['get', 'render_height'], 0], 1.0],
           'fill-extrusion-base': ['-', ['*', ['coalesce', ['get', 'render_height'], 0], 1.0], 1.5],
-          'fill-extrusion-opacity': 0.06,
+          'fill-extrusion-opacity': 0.08,
           'fill-extrusion-vertical-gradient': false,
         },
       }, labelLayerId);
@@ -267,7 +275,7 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
           'fill-extrusion-color': '#000000',
           'fill-extrusion-height': ['*', ['coalesce', ['get', 'render_height'], 0], 2.0],
           'fill-extrusion-base': ['-', ['*', ['coalesce', ['get', 'render_height'], 0], 2.0], 1.5],
-          'fill-extrusion-opacity': 0.06,
+          'fill-extrusion-opacity': 0.08,
           'fill-extrusion-vertical-gradient': false,
         },
       }, labelLayerId);
@@ -282,10 +290,10 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
         paint: {
           'fill-extrusion-color': '#000000',
           'fill-extrusion-height': [
-            '+', ['*', ['coalesce', ['get', 'render_height'], 8], 3.0], 0.3
+            '+', ['*', ['coalesce', ['get', 'render_height'], 8], 3.5], 0.3
           ],
           'fill-extrusion-base': [
-            '*', ['coalesce', ['get', 'render_height'], 8], 3.0
+            '*', ['coalesce', ['get', 'render_height'], 8], 3.5
           ],
           'fill-extrusion-opacity': 0.10,
           'fill-extrusion-vertical-gradient': false,
@@ -298,7 +306,7 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <style>{`
         .simcity-map {
-          filter: saturate(1.35) contrast(1.12) brightness(1.12);
+          filter: saturate(1.4) contrast(1.15) brightness(1.08);
         }
       `}</style>
 
