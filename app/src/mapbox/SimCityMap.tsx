@@ -116,7 +116,7 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
                 0, '#F0E0C0', 1, '#D0A868', 2, '#E0C8A0', '#C08858'
               ]
             ],
-            'fill-extrusion-height': ['*', ['get', 'height'], 3.5],
+            'fill-extrusion-height': ['*', ['get', 'height'], 6.0],
             'fill-extrusion-base': 0,
             'fill-extrusion-opacity': [
               'interpolate', ['linear'], ['zoom'],
@@ -239,16 +239,57 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
               '#F0E0C0'       // warm cream
             ]
           ],
-          'fill-extrusion-height': ['*', ['coalesce', ['get', 'render_height'], 8], 3.5],
-          'fill-extrusion-base': ['*', ['coalesce', ['get', 'render_min_height'], 0], 3.5],
+          'fill-extrusion-height': ['*', ['coalesce', ['get', 'render_height'], 8], 6.0],
+          'fill-extrusion-base': ['*', ['coalesce', ['get', 'render_min_height'], 0], 6.0],
           'fill-extrusion-opacity': 0.95,
           'fill-extrusion-vertical-gradient': true,
         },
       }, labelLayerId);
 
-      // Subtle floor band at 1/3 building height — suggests floor divisions
+      // ═══════════════════════════════════════════════════════════
+      // BUILDING DETAIL LAYERS — add depth, floors, crowns
+      // These stack on top of the main color layer to create
+      // architectural detail without repeating texture patterns
+      // ═══════════════════════════════════════════════════════════
+
+      // Ground floor / lobby — darker base on all buildings
+      // Suggests entrance level, retail, darker stone base
       map.addLayer({
-        id: 'building-band-lower',
+        id: 'building-ground-floor',
+        source: 'openmaptiles',
+        'source-layer': 'building',
+        type: 'fill-extrusion',
+        minzoom: 13,
+        filter: ['>', ['coalesce', ['get', 'render_height'], 0], 10],
+        paint: {
+          'fill-extrusion-color': '#2A2A20',
+          'fill-extrusion-height': ['min', ['*', ['coalesce', ['get', 'render_height'], 0], 0.4], 18],
+          'fill-extrusion-base': 0,
+          'fill-extrusion-opacity': 0.18,
+          'fill-extrusion-vertical-gradient': false,
+        },
+      }, labelLayerId);
+
+      // Floor division band at 1/6 height
+      map.addLayer({
+        id: 'building-band-1',
+        source: 'openmaptiles',
+        'source-layer': 'building',
+        type: 'fill-extrusion',
+        minzoom: 14,
+        filter: ['>', ['coalesce', ['get', 'render_height'], 0], 15],
+        paint: {
+          'fill-extrusion-color': '#000000',
+          'fill-extrusion-height': ['*', ['coalesce', ['get', 'render_height'], 0], 1.0],
+          'fill-extrusion-base': ['-', ['*', ['coalesce', ['get', 'render_height'], 0], 1.0], 3],
+          'fill-extrusion-opacity': 0.10,
+          'fill-extrusion-vertical-gradient': false,
+        },
+      }, labelLayerId);
+
+      // Floor division band at 1/3 height
+      map.addLayer({
+        id: 'building-band-2',
         source: 'openmaptiles',
         'source-layer': 'building',
         type: 'fill-extrusion',
@@ -256,31 +297,85 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
         filter: ['>', ['coalesce', ['get', 'render_height'], 0], 20],
         paint: {
           'fill-extrusion-color': '#000000',
-          'fill-extrusion-height': ['*', ['coalesce', ['get', 'render_height'], 0], 1.0],
-          'fill-extrusion-base': ['-', ['*', ['coalesce', ['get', 'render_height'], 0], 1.0], 1.5],
-          'fill-extrusion-opacity': 0.08,
+          'fill-extrusion-height': ['*', ['coalesce', ['get', 'render_height'], 0], 2.0],
+          'fill-extrusion-base': ['-', ['*', ['coalesce', ['get', 'render_height'], 0], 2.0], 3],
+          'fill-extrusion-opacity': 0.10,
           'fill-extrusion-vertical-gradient': false,
         },
       }, labelLayerId);
 
-      // Subtle floor band at 2/3 building height
+      // Floor division band at 1/2 height
       map.addLayer({
-        id: 'building-band-upper',
+        id: 'building-band-3',
         source: 'openmaptiles',
         'source-layer': 'building',
         type: 'fill-extrusion',
         minzoom: 14,
-        filter: ['>', ['coalesce', ['get', 'render_height'], 0], 30],
+        filter: ['>', ['coalesce', ['get', 'render_height'], 0], 25],
         paint: {
           'fill-extrusion-color': '#000000',
-          'fill-extrusion-height': ['*', ['coalesce', ['get', 'render_height'], 0], 2.0],
-          'fill-extrusion-base': ['-', ['*', ['coalesce', ['get', 'render_height'], 0], 2.0], 1.5],
-          'fill-extrusion-opacity': 0.08,
+          'fill-extrusion-height': ['*', ['coalesce', ['get', 'render_height'], 0], 3.0],
+          'fill-extrusion-base': ['-', ['*', ['coalesce', ['get', 'render_height'], 0], 3.0], 3],
+          'fill-extrusion-opacity': 0.10,
           'fill-extrusion-vertical-gradient': false,
         },
       }, labelLayerId);
 
-      // Roof tint — subtle darker shade on building tops for depth
+      // Floor division band at 2/3 height
+      map.addLayer({
+        id: 'building-band-4',
+        source: 'openmaptiles',
+        'source-layer': 'building',
+        type: 'fill-extrusion',
+        minzoom: 14,
+        filter: ['>', ['coalesce', ['get', 'render_height'], 0], 35],
+        paint: {
+          'fill-extrusion-color': '#000000',
+          'fill-extrusion-height': ['*', ['coalesce', ['get', 'render_height'], 0], 4.0],
+          'fill-extrusion-base': ['-', ['*', ['coalesce', ['get', 'render_height'], 0], 4.0], 3],
+          'fill-extrusion-opacity': 0.10,
+          'fill-extrusion-vertical-gradient': false,
+        },
+      }, labelLayerId);
+
+      // Floor division band at 5/6 height
+      map.addLayer({
+        id: 'building-band-5',
+        source: 'openmaptiles',
+        'source-layer': 'building',
+        type: 'fill-extrusion',
+        minzoom: 14,
+        filter: ['>', ['coalesce', ['get', 'render_height'], 0], 50],
+        paint: {
+          'fill-extrusion-color': '#000000',
+          'fill-extrusion-height': ['*', ['coalesce', ['get', 'render_height'], 0], 5.0],
+          'fill-extrusion-base': ['-', ['*', ['coalesce', ['get', 'render_height'], 0], 5.0], 3],
+          'fill-extrusion-opacity': 0.10,
+          'fill-extrusion-vertical-gradient': false,
+        },
+      }, labelLayerId);
+
+      // Skyscraper crown — bright accent on top of tall buildings
+      // Creates the lit penthouse / observation deck look
+      map.addLayer({
+        id: 'building-crown',
+        source: 'openmaptiles',
+        'source-layer': 'building',
+        type: 'fill-extrusion',
+        minzoom: 13,
+        filter: ['>', ['coalesce', ['get', 'render_height'], 0], 50],
+        paint: {
+          'fill-extrusion-color': '#FFFFF0',
+          'fill-extrusion-height': [
+            '+', ['*', ['coalesce', ['get', 'render_height'], 0], 6.0], 1
+          ],
+          'fill-extrusion-base': ['*', ['coalesce', ['get', 'render_height'], 0], 5.7],
+          'fill-extrusion-opacity': 0.25,
+          'fill-extrusion-vertical-gradient': false,
+        },
+      }, labelLayerId);
+
+      // Roof tint — darker shade on building tops for depth
       map.addLayer({
         id: 'buildings-roof-tint',
         source: 'openmaptiles',
@@ -288,14 +383,14 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
         type: 'fill-extrusion',
         minzoom: 14,
         paint: {
-          'fill-extrusion-color': '#000000',
+          'fill-extrusion-color': '#1A1A10',
           'fill-extrusion-height': [
-            '+', ['*', ['coalesce', ['get', 'render_height'], 8], 3.5], 0.3
+            '+', ['*', ['coalesce', ['get', 'render_height'], 8], 6.0], 0.5
           ],
           'fill-extrusion-base': [
-            '*', ['coalesce', ['get', 'render_height'], 8], 3.5
+            '*', ['coalesce', ['get', 'render_height'], 8], 6.0
           ],
-          'fill-extrusion-opacity': 0.10,
+          'fill-extrusion-opacity': 0.12,
           'fill-extrusion-vertical-gradient': false,
         },
       }, labelLayerId);

@@ -11,6 +11,26 @@ export const MAP_STYLE: any = {
       url: 'https://tiles.openfreemap.org/planet',
       bounds: [-118.8, 33.6, -117.9, 34.4], // LA metro only
     },
+    'terrain-dem': {
+      type: 'raster-dem',
+      tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+      encoding: 'terrarium',
+      tileSize: 256,
+      maxzoom: 14,
+      bounds: [-118.8, 33.6, -117.9, 34.4],
+    },
+    'hillshade-dem': {
+      type: 'raster-dem',
+      tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+      encoding: 'terrarium',
+      tileSize: 256,
+      maxzoom: 14,
+      bounds: [-118.8, 33.6, -117.9, 34.4],
+    },
+  },
+  terrain: {
+    source: 'terrain-dem',
+    exaggeration: 2.5, // SimCity-level terrain drama
   },
   glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
   light: {
@@ -27,6 +47,18 @@ export const MAP_STYLE: any = {
       id: 'background',
       type: 'background',
       paint: { 'background-color': '#70C050' }, // VIVID SimCity grass
+    },
+    // Hillshade — green-tinted terrain relief for SimCity hills
+    {
+      id: 'hillshade',
+      type: 'hillshade',
+      source: 'hillshade-dem',
+      paint: {
+        'hillshade-shadow-color': '#2A5A20',    // dark green shadows
+        'hillshade-highlight-color': '#90D870',  // bright green highlights
+        'hillshade-accent-color': '#408830',     // medium green ridges
+        'hillshade-exaggeration': 0.6,
+      },
     },
     // Water — rich saturated blue
     {
