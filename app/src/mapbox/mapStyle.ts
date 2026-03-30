@@ -30,7 +30,7 @@ export const MAP_STYLE: any = {
   },
   terrain: {
     source: 'terrain-dem',
-    exaggeration: 2.5, // SimCity-level terrain drama
+    exaggeration: 8, // EXTREME SimCity mountains
   },
   glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
   light: {
@@ -57,7 +57,7 @@ export const MAP_STYLE: any = {
         'hillshade-shadow-color': '#2A5A20',    // dark green shadows
         'hillshade-highlight-color': '#90D870',  // bright green highlights
         'hillshade-accent-color': '#408830',     // medium green ridges
-        'hillshade-exaggeration': 0.6,
+        'hillshade-exaggeration': 0.8,
       },
     },
     // Water — rich saturated blue
