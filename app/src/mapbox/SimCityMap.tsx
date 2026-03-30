@@ -22,15 +22,32 @@ interface SimCityMapProps {
   onDistrictSelect: (district: DistrictInfo | null) => void;
 }
 
+// Downtown LA center
+const CENTER_LAT = 34.0522;
+const CENTER_LNG = -118.2437;
+
+// Lazy-loaded Three.js components
+let ThreeCanvas: any = null;
+let SimCityBuildings: any = null;
+
 export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: SimCityMapProps) {
   const mapRef = useRef<MapRef>(null);
   const [hoveredDistrictId, setHoveredDistrictId] = useState<number | null>(null);
+  const [threeReady, setThreeReady] = useState(false);
+
+  // Load Three.js dynamically
+  useEffect(() => {
+    Promise.all([
+      import('react-three-map/maplibre').then(m => { ThreeCanvas = m.Canvas; }),
+      import('./SimCityBuildings').then(m => { SimCityBuildings = m.default; }),
+    ]).then(() => setThreeReady(true)).catch(e => console.warn('Three.js:', e));
+  }, []);
 
   useEffect(() => {
     if (!mapRef.current || !selectedDistrictId) return;
     const dist = DISTRICTS.find(d => d.id === selectedDistrictId);
     if (dist) {
-      mapRef.current.flyTo({ center: dist.center, zoom: 14, pitch: 55, bearing: -17, duration: 1500 });
+      mapRef.current.flyTo({ center: dist.center, zoom: 15, pitch: 55, bearing: -17, duration: 1500 });
     }
   }, [selectedDistrictId]);
 
@@ -47,64 +64,14 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
   ], [selectedDistrictId, hoveredDistrictId, handleDistrictClick, handleDistrictHover]);
 
   const handleMapLoad = useCallback(() => {
-    const map = mapRef.current?.getMap();
-    if (!map) return;
-
-    const styleLayers = map.getStyle()?.layers;
-    if (!styleLayers) return;
-
-    let labelLayerId: string | undefined;
-    for (const layer of styleLayers) {
-      if (layer.type === 'symbol' && (layer as any).layout?.['text-field']) {
-        labelLayerId = layer.id;
-        break;
-      }
-    }
-
-    // SimCity-style 3D buildings — bright flat colors, no vertical gradient
-    const sources = map.getStyle()?.sources;
-    const hasBuildings = Object.values(sources || {}).some((s: any) =>
-      s.type === 'vector' && (s.url?.includes('openmaptiles') || s.url?.includes('openfreemap'))
-    );
-
-    if (hasBuildings) {
-      map.addLayer({
-        id: 'buildings-3d',
-        source: 'openmaptiles',
-        'source-layer': 'building',
-        type: 'fill-extrusion',
-        minzoom: 1,
-        paint: {
-          // SimCity color ramp: green houses → blue commercial → yellow office → purple skyscrapers
-          'fill-extrusion-color': [
-            'interpolate', ['linear'], ['coalesce', ['get', 'render_height'], 8],
-            0, '#6ABF69',     // bright green (houses)
-            12, '#C4B998',    // warm tan (low-rise)
-            25, '#5DADE2',    // bright blue (mid-rise)
-            50, '#F4D03F',    // bright yellow (office)
-            80, '#E74C3C',    // red (tall)
-            120, '#8E44AD',   // purple (skyscrapers)
-            200, '#F0F0F0',   // white (supertall)
-          ],
-          'fill-extrusion-height': [
-            '*', ['coalesce', ['get', 'render_height'], 8], 2.0 // 2x height exaggeration
-          ],
-          'fill-extrusion-base': [
-            '*', ['coalesce', ['get', 'render_min_height'], 0], 2.0
-          ],
-          'fill-extrusion-opacity': 0.92,
-          'fill-extrusion-vertical-gradient': false, // flat shading = SimCity look
-        },
-      }, labelLayerId);
-    }
+    // No fill-extrusion — Three.js handles all buildings
   }, []);
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-      {/* SimCity post-processing: pixelation + saturation */}
       <style>{`
         .simcity-map {
-          filter: saturate(1.5) contrast(1.2) brightness(1.05);
+          filter: saturate(1.4) contrast(1.15);
         }
       `}</style>
 
@@ -112,9 +79,9 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
         <Map
           ref={mapRef}
           initialViewState={{
-            longitude: -118.2437,
-            latitude: 34.0522,
-            zoom: 14,
+            longitude: CENTER_LNG,
+            latitude: CENTER_LAT,
+            zoom: 15,
             pitch: 55,
             bearing: -17,
           }}
@@ -127,10 +94,15 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
           style={{ width: '100%', height: '100%' }}
           cursor={hoveredDistrictId ? 'pointer' : 'grab'}
           attributionControl={false}
-          // pixelRatio kept at default for readable text
         >
           <DeckGLOverlay layers={layers} />
           <NavigationControl position="top-left" showCompass={false} />
+
+          {threeReady && ThreeCanvas && SimCityBuildings && (
+            <ThreeCanvas latitude={CENTER_LAT} longitude={CENTER_LNG} altitude={0}>
+              <SimCityBuildings />
+            </ThreeCanvas>
+          )}
         </Map>
       </div>
     </div>
