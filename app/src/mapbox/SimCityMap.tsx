@@ -19,7 +19,9 @@ function DeckGLOverlay(props: any) {
 
 interface SimCityMapProps {
   selectedDistrictId: number | null;
+  hoveredDistrictId: number | null;
   onDistrictSelect: (district: DistrictInfo | null) => void;
+  onDistrictHover: (districtId: number | null) => void;
 }
 
 // Downtown LA center
@@ -36,9 +38,8 @@ const LA_BOUNDS: [[number, number], [number, number]] = [
 let ThreeCanvas: any = null;
 let SimCityBuildings: any = null;
 
-export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: SimCityMapProps) {
+export default function SimCityMap({ selectedDistrictId, hoveredDistrictId, onDistrictSelect, onDistrictHover }: SimCityMapProps) {
   const mapRef = useRef<MapRef>(null);
-  const [hoveredDistrictId, setHoveredDistrictId] = useState<number | null>(null);
   const [threeReady, setThreeReady] = useState(false);
 
   // Load Three.js dynamically
@@ -62,8 +63,8 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
   }, [onDistrictSelect]);
 
   const handleDistrictHover = useCallback((districtId: number | null) => {
-    setHoveredDistrictId(districtId);
-  }, []);
+    onDistrictHover(districtId);
+  }, [onDistrictHover]);
 
   const layers = useMemo(() => [
     createDistrictLayer(districtsGeoJson, selectedDistrictId, hoveredDistrictId, handleDistrictClick, handleDistrictHover),

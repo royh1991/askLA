@@ -10,6 +10,8 @@ const SimCityMap = dynamic(() => import('../mapbox/SimCityMap'), { ssr: false })
 
 export default function SimCityApp() {
   const [selectedDistrict, setSelectedDistrict] = useState<DistrictInfo | null>(null);
+  const [hoveredDistrictId, setHoveredDistrictId] = useState<number | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const handleDistrictSelect = useCallback((district: DistrictInfo | null) => {
     setSelectedDistrict(district);
@@ -39,12 +41,22 @@ export default function SimCityApp() {
         <div className="flex-1 relative">
           <SimCityMap
             selectedDistrictId={selectedDistrict?.id ?? null}
+            hoveredDistrictId={hoveredDistrictId}
             onDistrictSelect={handleDistrictSelect}
+            onDistrictHover={setHoveredDistrictId}
           />
         </div>
 
-        {/* Sidebar */}
-        <div className="w-[240px] border-l border-[#2A4A6A] bg-[#1A2A3A] overflow-auto shrink-0">
+        {/* Sidebar — collapsible */}
+        <div className={`${sidebarOpen ? 'w-[240px]' : 'w-[28px]'} border-l border-[#2A4A6A] bg-[#1A2A3A] overflow-hidden shrink-0 transition-all duration-200 flex flex-col`}>
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="w-full text-[10px] text-[#8AB] py-1 px-1 hover:bg-[#2A3A4A] border-b border-[#2A4A6A] shrink-0"
+            title={sidebarOpen ? 'Collapse' : 'Expand'}
+          >
+            {sidebarOpen ? '▶ Districts' : '◀'}
+          </button>
+          {sidebarOpen && <div className="flex-1 overflow-auto">
           <AnimatePresence mode="wait">
             {selectedDistrict ? (
               <motion.div key={selectedDistrict.id} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}
@@ -104,17 +116,24 @@ export default function SimCityApp() {
                 <div className="text-[12px] font-bold text-[#B0C8E0] mb-2 px-1">Council Districts</div>
                 {DISTRICTS.map(d => (
                   <div key={d.id}
-                    className="flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer hover:bg-[#2A3A4A] transition-colors"
-                    onClick={() => handleDistrictSelect(d)}>
-                    <div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: d.color }} />
+                    className="flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer transition-colors"
+                    style={{ backgroundColor: hoveredDistrictId === d.id ? d.color + '30' : 'transparent' }}
+                    onClick={() => handleDistrictSelect(d)}
+                    onMouseEnter={() => setHoveredDistrictId(d.id)}
+                    onMouseLeave={() => setHoveredDistrictId(null)}>
+                    <div className="w-3 h-3 rounded-sm shrink-0" style={{
+                      backgroundColor: d.color,
+                      boxShadow: hoveredDistrictId === d.id ? `0 0 6px ${d.color}` : 'none',
+                    }} />
                     <span className="font-mono text-[9px] text-[#8AA] w-8">{d.name}</span>
-                    <span className="text-[9px] text-[#B0C8E0] truncate flex-1">{d.member}</span>
+                    <span className={`text-[9px] truncate flex-1 ${hoveredDistrictId === d.id ? 'text-white font-bold' : 'text-[#B0C8E0]'}`}>{d.member}</span>
                     <span className="text-[8px] text-[#5A7A8A]">{d.meetings}</span>
                   </div>
                 ))}
               </motion.div>
             )}
           </AnimatePresence>
+          </div>}
         </div>
       </div>
 
