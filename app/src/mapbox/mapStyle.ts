@@ -14,9 +14,9 @@ export const MAP_STYLE: any = {
   glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
   light: {
     anchor: 'viewport',
-    color: '#FFF8E8',
-    intensity: 0.6,
-    position: [1.5, 210, 30], // radial distance, azimuth, polar angle
+    color: '#FFFFFF',
+    intensity: 0.8,
+    position: [1.5, 210, 45],
   },
   layers: [
     // Background — dark green like SimCity grass

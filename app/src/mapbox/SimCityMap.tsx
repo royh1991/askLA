@@ -95,19 +95,19 @@ export default function SimCityMap({ selectedDistrictId, onDistrictSelect }: Sim
           'fill-extrusion-color': [
             'match',
             ['%', ['to-number', ['id'], 0], 12],
-            0, '#6B8EAD',   // steel blue glass
-            1, '#E8D8C0',   // cream/ivory
-            2, '#B05A3C',   // brick red
-            3, '#7AACB0',   // teal
-            4, '#D4C090',   // warm sand
-            5, '#8898A8',   // cool gray
-            6, '#C8A060',   // golden tan
-            7, '#9EB89E',   // sage green
-            8, '#B89070',   // sienna
-            9, '#6890B0',   // slate blue
-            10, '#D0B880',  // wheat
-            11, '#A87858',  // copper brown
-            '#C4B998'       // default warm tan
+            0, '#5888B8',   // blue glass tower
+            1, '#E8E0D0',   // warm white
+            2, '#B85A3C',   // terracotta brick
+            3, '#4A98A8',   // teal glass
+            4, '#D8D0C0',   // cream
+            5, '#8090A0',   // steel gray
+            6, '#C8A858',   // golden
+            7, '#78A8C8',   // sky blue glass
+            8, '#C0A080',   // sandstone
+            9, '#6080A0',   // dark blue glass
+            10, '#E0D8C8',  // off-white
+            11, '#A06848',  // dark brick
+            '#D0C8B8'       // default cream
           ],
           'fill-extrusion-height': [
             '*', ['coalesce', ['get', 'render_height'], 8], 2.5
