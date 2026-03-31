@@ -47,92 +47,109 @@ export default function SimCityApp() {
           />
         </div>
 
-        {/* Sidebar — collapsible */}
-        <div className={`${sidebarOpen ? 'w-[240px]' : 'w-[28px]'} border-l border-[#2A4A6A] bg-[#1A2A3A] overflow-hidden shrink-0 transition-all duration-200 flex flex-col`}>
+        {/* Sidebar — collapsible panel with accordion district list */}
+        <div className={`${sidebarOpen ? 'w-[260px]' : 'w-[28px]'} border-l border-[#2A4A6A] bg-[#1A2A3A] overflow-hidden shrink-0 transition-all duration-200 flex flex-col`}>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="w-full text-[10px] text-[#8AB] py-1 px-1 hover:bg-[#2A3A4A] border-b border-[#2A4A6A] shrink-0"
+            className="w-full text-[10px] text-[#8AB] py-1.5 px-2 hover:bg-[#2A3A4A] border-b border-[#2A4A6A] shrink-0 text-left"
             title={sidebarOpen ? 'Collapse' : 'Expand'}
           >
-            {sidebarOpen ? '▶ Districts' : '◀'}
+            {sidebarOpen ? '◀ Council Districts' : '▶'}
           </button>
-          {sidebarOpen && <div className="flex-1 overflow-auto">
-          <AnimatePresence mode="wait">
-            {selectedDistrict ? (
-              <motion.div key={selectedDistrict.id} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}
-                className="p-3 text-[11px]">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-5 h-5 rounded" style={{ backgroundColor: selectedDistrict.color, boxShadow: `0 0 8px ${selectedDistrict.color}` }} />
-                  <div>
-                    <div className="text-[15px] font-bold text-white">{selectedDistrict.name}</div>
-                    <div className="text-[10px] text-[#8AA]">{selectedDistrict.population} residents</div>
-                  </div>
-                </div>
-                <div className="bg-[#2A3A4A] rounded-lg p-2.5 mb-3 border border-[#3A5A7A]">
-                  <div className="text-[9px] text-[#6A8A] uppercase tracking-wider mb-1">Council Member</div>
-                  <div className="text-[13px] font-bold text-[#E0F0FF]" style={{ fontFamily: 'Georgia, serif' }}>
-                    {selectedDistrict.member}
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 mb-3">
-                  <div className="bg-[#2A3A4A] rounded p-2 text-center border border-[#3A5A7A]">
-                    <div className="text-[16px] font-bold text-[#4CAF50]">{selectedDistrict.meetings}</div>
-                    <div className="text-[8px] text-[#8AA] uppercase">meetings/yr</div>
-                  </div>
-                  <div className="bg-[#2A3A4A] rounded p-2 text-center border border-[#3A5A7A]">
-                    <div className="text-[16px] font-bold text-[#FFD700]">{selectedDistrict.population}</div>
-                    <div className="text-[8px] text-[#8AA] uppercase">population</div>
-                  </div>
-                </div>
-                <div className="mb-3">
-                  <div className="text-[9px] text-[#6A8A] uppercase tracking-wider mb-1 font-mono">[■] Neighborhoods</div>
-                  <div className="flex flex-wrap gap-1">
-                    {selectedDistrict.neighborhoods.map(n => (
-                      <span key={n} className="text-[9px] px-2 py-0.5 rounded bg-[#2A3A4A] text-[#C0D0E0] border border-[#3A5A7A]">{n}</span>
-                    ))}
-                  </div>
-                </div>
-                <div className="mb-3">
-                  <div className="text-[9px] text-[#6A8A] uppercase tracking-wider mb-1 font-mono">[◆] Hot Topics</div>
-                  <div className="flex flex-wrap gap-1">
-                    {selectedDistrict.hotTopics.map(t => (
-                      <span key={t} className="text-[9px] px-2 py-0.5 rounded text-white border"
-                        style={{ backgroundColor: selectedDistrict.color + '33', borderColor: selectedDistrict.color + '66' }}>{t}</span>
-                    ))}
-                  </div>
-                </div>
-                <div className="mb-3">
-                  <div className="text-[9px] text-[#6A8A] uppercase tracking-wider mb-1 font-mono">[~] Recent</div>
-                  <p className="text-[10px] text-[#B0C8E0] leading-[14px] bg-[#2A3A4A] rounded p-2 border border-[#3A5A7A]">
-                    {selectedDistrict.recentAction}
-                  </p>
-                </div>
-                <button className="xp-button text-[10px] w-full" onClick={() => setSelectedDistrict(null)}>
-                  Deselect
-                </button>
-              </motion.div>
-            ) : (
-              <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-2 text-[10px]">
-                <div className="text-[12px] font-bold text-[#B0C8E0] mb-2 px-1">Council Districts</div>
-                {DISTRICTS.map(d => (
-                  <div key={d.id}
+          {sidebarOpen && <div className="flex-1 overflow-auto p-1">
+            {DISTRICTS.map(d => {
+              const isSelected = selectedDistrict?.id === d.id;
+              const isHovered = hoveredDistrictId === d.id;
+              return (
+                <div key={d.id}>
+                  {/* District row — always visible */}
+                  <div
                     className="flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer transition-colors"
-                    style={{ backgroundColor: hoveredDistrictId === d.id ? d.color + '30' : 'transparent' }}
-                    onClick={() => handleDistrictSelect(d)}
+                    style={{
+                      backgroundColor: isSelected ? d.color + '25' : isHovered ? d.color + '18' : 'transparent',
+                      borderLeft: isSelected ? `3px solid ${d.color}` : '3px solid transparent',
+                    }}
+                    onClick={() => handleDistrictSelect(isSelected ? null : d)}
                     onMouseEnter={() => setHoveredDistrictId(d.id)}
-                    onMouseLeave={() => setHoveredDistrictId(null)}>
+                    onMouseLeave={() => setHoveredDistrictId(null)}
+                  >
                     <div className="w-3 h-3 rounded-sm shrink-0" style={{
                       backgroundColor: d.color,
-                      boxShadow: hoveredDistrictId === d.id ? `0 0 6px ${d.color}` : 'none',
+                      boxShadow: isHovered || isSelected ? `0 0 6px ${d.color}` : 'none',
                     }} />
-                    <span className="font-mono text-[9px] text-[#8AA] w-8">{d.name}</span>
-                    <span className={`text-[9px] truncate flex-1 ${hoveredDistrictId === d.id ? 'text-white font-bold' : 'text-[#B0C8E0]'}`}>{d.member}</span>
-                    <span className="text-[8px] text-[#5A7A8A]">{d.meetings}</span>
+                    <span className={`text-[9px] truncate flex-1 ${isSelected ? 'text-white font-bold' : isHovered ? 'text-white' : 'text-[#B0C8E0]'}`}>
+                      {d.member}
+                    </span>
+                    <span className="text-[9px] text-[#5A7A8A]">{isSelected ? '▾' : '▸'}</span>
                   </div>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
+
+                  {/* Expanded detail — accordion */}
+                  <AnimatePresence>
+                    {isSelected && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pl-4 pr-2 pb-2 pt-1 text-[10px]">
+                          {/* Header */}
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-4 h-4 rounded" style={{ backgroundColor: d.color, boxShadow: `0 0 8px ${d.color}` }} />
+                            <div>
+                              <div className="text-[13px] font-bold text-white">{d.name}</div>
+                              <div className="text-[9px] text-[#8AA]">{d.population} residents</div>
+                            </div>
+                          </div>
+
+                          {/* Stats */}
+                          <div className="grid grid-cols-2 gap-1.5 mb-2">
+                            <div className="bg-[#2A3A4A] rounded p-1.5 text-center border border-[#3A5A7A]">
+                              <div className="text-[14px] font-bold text-[#4CAF50]">{d.meetings}</div>
+                              <div className="text-[7px] text-[#8AA] uppercase">meetings/yr</div>
+                            </div>
+                            <div className="bg-[#2A3A4A] rounded p-1.5 text-center border border-[#3A5A7A]">
+                              <div className="text-[14px] font-bold text-[#FFD700]">{d.population}</div>
+                              <div className="text-[7px] text-[#8AA] uppercase">population</div>
+                            </div>
+                          </div>
+
+                          {/* Neighborhoods */}
+                          <div className="mb-2">
+                            <div className="text-[8px] text-[#6A8A] uppercase tracking-wider mb-1 font-mono">[■] Neighborhoods</div>
+                            <div className="flex flex-wrap gap-0.5">
+                              {d.neighborhoods.map(n => (
+                                <span key={n} className="text-[8px] px-1.5 py-0.5 rounded bg-[#2A3A4A] text-[#C0D0E0] border border-[#3A5A7A]">{n}</span>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Hot Topics */}
+                          <div className="mb-2">
+                            <div className="text-[8px] text-[#6A8A] uppercase tracking-wider mb-1 font-mono">[◆] Hot Topics</div>
+                            <div className="flex flex-wrap gap-0.5">
+                              {d.hotTopics.map(t => (
+                                <span key={t} className="text-[8px] px-1.5 py-0.5 rounded text-white border"
+                                  style={{ backgroundColor: d.color + '33', borderColor: d.color + '66' }}>{t}</span>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Recent Action */}
+                          <div>
+                            <div className="text-[8px] text-[#6A8A] uppercase tracking-wider mb-1 font-mono">[~] Recent</div>
+                            <p className="text-[9px] text-[#B0C8E0] leading-[12px] bg-[#2A3A4A] rounded p-1.5 border border-[#3A5A7A]">
+                              {d.recentAction}
+                            </p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
           </div>}
         </div>
       </div>
