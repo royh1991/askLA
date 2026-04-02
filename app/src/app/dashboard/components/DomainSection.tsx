@@ -25,8 +25,8 @@ export function DomainSection({ section, questions, index }: DomainSectionProps)
   const heroY = useTransform(scrollYProgress, [0, 1], [30, -30])
   const heroOpacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0.6, 1, 1, 0.6])
 
-  // Gemini-generated SVG illustration
-  const imageSrc = `/sprites/dashboard/section-${section.id}.svg`
+  // Imagen 4.0 generated illustration (PNG)
+  const imageSrc = `/sprites/dashboard/section-${section.id}.png`
 
   return (
     <div id={`section-${section.id}`}>
@@ -127,12 +127,12 @@ export function DomainSection({ section, questions, index }: DomainSectionProps)
             <img
               src={imageSrc}
               alt={section.title}
-              width={180}
-              height={180}
+              width={240}
+              height={240}
               style={{
                 objectFit: 'contain',
-                filter: isEven ? 'brightness(1.1)' : 'none',
-                opacity: 0.9,
+                filter: isEven ? 'drop-shadow(0 4px 12px rgba(0,0,0,0.15))' : 'drop-shadow(0 4px 12px rgba(0,0,0,0.1))',
+                borderRadius: 8,
               }}
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = 'none'
