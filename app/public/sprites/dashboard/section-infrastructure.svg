@@ -1,0 +1,25 @@
+<svg width="400" height="400" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#333;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#000;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <polygon points="0,200 200,100 400,200 200,300" fill="#CCC"/>
+  <polygon points="200,100 250,75 350,125 300,150" fill="#333"/>
+  <polygon points="300,150 350,125 400,150 350,175" fill="#333"/>
+  <polygon points="50,125 100,150 200,100 150,75" fill="#333"/>
+  <polygon points="50,275 100,300 200,250 150,225" fill="#333"/>
+  <polygon points="200,300 250,325 350,275 300,250" fill="#333"/>
+
+  <rect x="75" y="175" width="10" height="50" fill="#000"/>
+  <rect x="73" y="173" width="14" height="4" fill="#FDCB6E"/>
+  <rect x="73" y="225" width="14" height="4" fill="#FDCB6E"/>
+  <rect x="75" y="225" width="10" height="20" fill="#000"/>
+
+  <rect x="325" y="175" width="10" height="100" fill="#000"/>
+  <rect x="320" y="170" width="20" height="10" fill="#FDCB6E"/>
+  <rect x="325" y="275" width="10" height="20" fill="#000"/>
+  <circle cx="330" cy="140" r="15" fill="#FDCB6E"/>
+  <circle cx="330" cy="140" r="10" fill="#FFF"/>
+</svg>
